@@ -34,18 +34,19 @@
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
 
-        // Function to check authentication state
-        function checkAuthState() {
-            firebase.auth().onAuthStateChanged(user => {
-                setTimeout(() => {
-                    if (user) {
-                        window.location.href = "maininterface.html";
-                    } else {
-                        window.location.href = "signin.html";
-                    }
-                }, 5000); // 5 seconds delay
-            });
-        }
+       function checkAuthState() {
+        firebase.auth().onAuthStateChanged(user => {
+            setTimeout(() => {
+                if (user) {
+                    // Redirect to maininterface.html in Electron
+                    window.location.href = "electron://maininterface.html"; // Electron local file
+                } else {
+                    // Redirect to signin.html (normal web flow)
+                    window.location.href = "signin.html";
+                }
+            }, 5000); // 5 seconds delay
+        });
+    }
     </script>
 
     <style>
