@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Participants</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .header {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: #f5f5f5;
+        }
+        .back-button {
+            font-size: 24px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .hostname {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .loading {
+            margin-top: 20px;
+            font-size: 18px;
+            color: gray;
+        }
+        .participants-list {
+            width: 90%;
+            margin-top: 20px;
+            list-style: none;
+            padding: 0;
+      }
+     
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1000; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; /* Could be more or less, depending on screen size */
+    max-width: 400px; /* Set a max width */
+    border-radius: 8px; /* Rounded corners */
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+button {
+    padding: 10px 20px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #ddd;
+}
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <i class="fas fa-arrow-left back-button" onclick="goBack()"></i>
+        <span class="hostname" id="hostname">Loading...</span>
+    </div>
+    <p class="loading" id="loadingText">Loading participants...</p>
+    <ul class="participants-list" id="participantsList"></ul>
+<div id="removeDialog" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeRemoveDialog()">&times;</span>
+        <h2>Remove Participant</h2>
+        <p id="removeDialogMessage"></p>
+        <button id="confirmRemoveButton">Yes, Remove</button>
+        <button onclick="closeRemoveDialog()">Cancel</button>
+    </div>
+</div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBcTEVvxXmv5N8dJav4xNDRy5hXZRjVeM4",
+            authDomain: "chatflow-59776.firebaseapp.com",
+            databaseURL: "https://chatflow-59776-default-rtdb.firebaseio.com",
+            projectId: "chatflow-59776",
+            storageBucket: "chatflow-59776.appspot.com",
+            messagingSenderId: "549003131640",
+            appId: "1:549003131640:web:3f4a7b8cef4c0d8a2b990d",
+            measurementId: "G-V2180PR5CR"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Get hostname and hostId from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const hostname = urlParams.get('hostname');
+        const hostId = urlParams.get('hostId');
+const currentUserEmail = firebase.auth().currentUser?.email;
+        if (hostname) {
+            document.getElementById("hostname").textContent = hostname;
+        }
+
+        function goBack() {
+            window.history.back();
+        }
+
+function loadParticipants() {
+    if (!hostId) {
+        document.getElementById("loadingText").textContent = "Invalid Host ID";
+        return;
+    }
+
+    // Create and add CSS styles dynamically
+    const style = document.createElement("style");
+    style.textContent = `
+        .participant {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            cursor: pointer; /* Add pointer cursor for clickable items */
+        }
+        
+        .profile-pic {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 10px;
+        }
+        
+        .participant-info {
+            display: flex;
+            flex-direction: column; /* Stack name and timestamp vertically */
+            margin-left: 10px; /* Space between image and info */
+        }
+
+        .info-row {
+            display: flex;
+            align-items: center; /* Center align items */
+        }
+
+        .name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-right: 5px; /* Space after name */
+        }
+
+        .timestamp {
+            font-size: 12px;
+            color: gray;
+            margin-top: 5px; /* Add some space above timestamp */
+        }
+
+        /* Styles for the Owner text */
+        .owner {
+            font-size: 14px;
+            color: blue;
+            margin-left: 5px; /* Space between name and owner text */
+        }
+
+        /* Styles for the verification image */
+        .verification-badge {
+            width: 16px; /* Adjust size as needed */
+            height: 16px; /* Adjust size as needed */
+            margin-left: 5px; /* Space between name and verification image */
+            display: none; /* Initially hidden */
+        }
+    `;
+    document.head.appendChild(style);
+
+    const participantsList = document.getElementById("participantsList");
+    db.collection("host").doc(hostId).collection("subscribers")
+        .get()
+        .then(querySnapshot => {
+            if (querySnapshot.empty) {
+                document.getElementById("loadingText").textContent = "No participants found.";
+            } else {
+                document.getElementById("loadingText").style.display = "none";
+            }
+
+            querySnapshot.forEach(doc => {
+                const email = doc.data().email;
+                const timestamp = doc.data().timestamp || 0;
+
+                Promise.all([
+                    fetchNameByEmail(email),
+                    fetchProfilePhotoByEmail(email),
+                    checkVerification(email),
+                    getHostCreator(hostId)
+                ]).then(([name, photoUrl, isVerified, creatorEmail]) => {
+                    const listItem = document.createElement("li");
+                    listItem.classList.add("participant");
+
+                    const img = document.createElement("img");
+                    img.classList.add("profile-pic");
+                    img.src = photoUrl || "user_1077114.png";
+
+                    const infoDiv = document.createElement("div");
+                    infoDiv.classList.add("participant-info");
+
+                    // Create a row for name, verification, and owner
+                    const infoRow = document.createElement("div");
+                    infoRow.classList.add("info-row");
+
+                    const nameSpan = document.createElement("span");
+                    nameSpan.classList.add("name");
+                    nameSpan.textContent = name || "Unknown";
+
+                    const ownerSpan = document.createElement("span");
+                    ownerSpan.classList.add("owner");
+                    ownerSpan.textContent = "Owner";
+                    ownerSpan.style.display = "none"; // Initially hidden
+
+                    const verificationImg = document.createElement("img");
+                    verificationImg.src = "verification.png";
+                    verificationImg.classList.add("verification-badge");
+                    verificationImg.style.display = "none"; // Initially hidden
+
+                    if (creatorEmail === email) {
+                        ownerSpan.style.display = "inline";
+                        listItem.style.pointerEvents = "none"; // Disable all clicks for creator
+                    }
+
+                    if (isVerified) {
+                        verificationImg.style.display = "inline";
+                    }
+
+                    // Append name, verification, and owner to infoRow
+                    infoRow.appendChild(nameSpan);
+                    infoRow.appendChild(verificationImg);
+                    infoRow.appendChild(ownerSpan);
+
+                    // Append infoRow and timestamp to infoDiv
+                    infoDiv.appendChild(infoRow);
+
+                    const timestampSpan = document.createElement("span");
+                    timestampSpan.classList.add("timestamp");
+                    timestampSpan.textContent = formatTimestamp(timestamp);
+                    infoDiv.appendChild(timestampSpan);
+
+                    listItem.appendChild(img);
+                    listItem.appendChild(infoDiv);
+                    participantsList.appendChild(listItem);
+
+                    // Enable interaction for non-creator participants
+                    if (creatorEmail !== email) {
+                        listItem.addEventListener("click", () => {
+                            window.location.href = `chat_layout.html?name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}`;
+                        });
+
+                        listItem.addEventListener("contextmenu", (event) => {
+                            event.preventDefault();
+                            showRemoveDialog(email, name, listItem);
+                        });
+                    }
+                });
+            });
+        })
+        .catch(error => {
+            document.getElementById("loadingText").textContent = "Error loading participants.";
+            console.error(error);
+        });
+}
+
+
+// Check if user is verified
+function checkVerification(email) {
+    return db.collection("verificationbridge").where("email", "==", email).get()
+        .then(querySnapshot => !querySnapshot.empty)
+        .catch(() => false);
+}
+
+// Get host creator
+function getHostCreator(hostId) {
+    return db.collection("host").doc(hostId).get()
+        .then(doc => doc.exists ? doc.data().creator : null)
+        .catch(() => null);
+}
+
+function showRemoveDialog(email, name, listItem) {
+    const dialog = document.getElementById("removeDialog");
+    const message = document.getElementById("removeDialogMessage");
+    const confirmButton = document.getElementById("confirmRemoveButton");
+
+    message.textContent = `Are you sure you want to remove ${name}?`;
+    
+    dialog.style.display = "block"; // Show the modal
+
+    confirmButton.onclick = () => {
+        db.collection("host").doc(hostId).collection("subscribers")
+            .where("email", "==", email).get()
+            .then(querySnapshot => {
+                querySnapshot.forEach(doc => doc.ref.delete());
+                listItem.remove();
+            })
+            .catch(() => alert("Failed to remove participant"));
+        closeRemoveDialog(); // Close the dialog after confirmation
+    };
+}
+
+function closeRemoveDialog() {
+    const dialog = document.getElementById("removeDialog");
+    dialog.style.display = "none"; // Hide the modal
+}
+
+// Close the modal when the user clicks anywhere outside of it
+window.onclick = function(event) {
+    const dialog = document.getElementById("removeDialog");
+    if (event.target === dialog) {
+        dialog.style.display = "none";
+    }
+};
+
+
+
+// Function to format timestamp into readable date
+function formatTimestamp(timestamp) {
+    if (!timestamp) return "Unknown time";
+    const date = new Date(timestamp);
+    return date.toLocaleString(); // Adjust format as needed
+}
+
+
+        function fetchNameByEmail(email) {
+            return db.collection("names").where("email", "==", email).get()
+                .then(querySnapshot => {
+                    let latestName = null;
+                    let lastTimestamp = 0;
+
+                    querySnapshot.forEach(doc => {
+                        const timestamp = doc.data().timestamp || 0;
+                        if (timestamp > lastTimestamp) {
+                            lastTimestamp = timestamp;
+                            latestName = doc.data().name;
+                        }
+                    });
+
+                    return latestName;
+                });
+        }
+
+        function fetchProfilePhotoByEmail(email) {
+            return db.collection("profilesphoto").where("uploaderEmail", "==", email).get()
+                .then(querySnapshot => {
+                    let latestPhotoUrl = null;
+                    let lastTimestamp = 0;
+
+                    querySnapshot.forEach(doc => {
+                        const timestamp = doc.data().timestamp || 0;
+                        if (timestamp > lastTimestamp) {
+                            lastTimestamp = timestamp;
+                            latestPhotoUrl = doc.data().downloadUrl;
+                        }
+                    });
+
+                    return latestPhotoUrl;
+                });
+        }
+
+        loadParticipants();
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome</title>
+<link rel="icon" type="image/x-icon" href="FalconS.ico">
+<script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": "Falcon S Messaging",
+      "description": "Falcon S Messaging is a secure, easy-to-use messaging app for friends and family.",
+      "url": "https://falcons-egw.pages.dev/"
+    }
+    </script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBcTEVvxXmv5N8dJav4xNDRy5hXZRjVeM4",
+            authDomain: "chatflow-59776.firebaseapp.com",
+            databaseURL: "https://chatflow-59776-default-rtdb.firebaseio.com",
+            projectId: "chatflow-59776",
+            storageBucket: "chatflow-59776.appspot.com",
+            messagingSenderId: "549003131640",
+            appId: "1:549003131640:web:3f4a7b8cef4c0d8a2b990d",
+            measurementId: "G-V2180PR5CR"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        // Function to check authentication state
+        function checkAuthState() {
+            firebase.auth().onAuthStateChanged(user => {
+                setTimeout(() => {
+                    if (user) {
+                        window.location.href = "maininterface.html";
+                    } else {
+                        window.location.href = "signin.html";
+                    }
+                }, 5000); // 5 seconds delay
+            });
+        }
+    </script>
+
+    <style>
+        /* General reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background-color: white; /* Set background to white */
+            font-family: Arial, sans-serif;
+        }
+
+        /* Container for centered content */
+        .container {
+            text-align: center;
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Image styling */
+        #splashImage {
+            width: 50%; /* Reduced size for the image */
+            height: auto;
+        }
+
+        /* Footer text */
+        .footer {
+            color: gray;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body onload="checkAuthState();">
+    <div class="container">
+        <!-- Centered image -->
+        <img id="splashImage" src="convo.png" alt="Splash Image">
+    </div>
+
+    <!-- Footer text -->
+    <div class="footer">Owned by Genix</div>
+</body>
+</html>

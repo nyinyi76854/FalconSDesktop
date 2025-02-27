@@ -1,0 +1,1960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Falcon S Powered by Genix</title>
+    <link rel="icon" type="image/x-icon" href="FalconS.ico">
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+body {
+    font-family: 'Poppins', sans-serif; /* Modern font */
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+    background: linear-gradient(135deg, #1E1E1E, #3A3A3A); /* Dark gradient */
+    overflow: hidden;
+    opacity: 1;
+    transition: opacity 0.5s ease-in-out;
+}
+body.fade-out {
+    opacity: 0;
+}
+/* Container for each group chat */
+.group-chat {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    justify-content: flex-start; /* Align elements to the left */
+    width: 100%; /* Ensure full width */
+    box-sizing: border-box; /* Prevent content from overflowing */
+}
+
+
+/* Profile image - circular */
+.profile-image {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%; /* Makes the image circular */
+    object-fit: cover; /* Ensures the image fits within the circle */
+    margin-right: 15px; /* Space between profile image and text */
+}
+
+/* Group info container - aligns text to the right of the profile image */
+.group-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* Group name - displayed at the top right */
+.group-chat h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Last message text - below the group name */
+.group-chat p {
+    margin: 5px 0;
+    font-size: 14px;
+    color: #555;
+}
+
+/* Timestamp text - displayed below the last message */
+.group-chat span {
+    font-size: 12px;
+    color: #888;
+}
+.main-container {
+    width: 80%;
+    max-width: 900px;
+    height: 80vh;
+    background: rgba(255, 255, 255, 0.1); /* Transparent background */
+    backdrop-filter: blur(15px); /* Blurry glass effect */
+    border-radius: 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+/* Sidebar Toggle Button (Black Icon) */
+.sidebar-toggle {
+    position: absolute;
+    top: 15px;
+    left: 15px; /* Align to the left */
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: black; /* Set icon color to black */
+    cursor: pointer;
+    z-index: 10;
+    transition: transform 0.3s ease;
+}
+
+/* Left Section (Compact & Fixed Height) */
+.left-section {
+    width: 50%;
+    max-width: 500px; /* Slightly smaller for a compact look */
+    height: 80vh; /* Fixed height, not full screen but not half */
+    padding: 15px;
+    background-color: #ccc; /* Gray background */
+    box-sizing: border-box;
+    overflow-y: auto;
+    border-radius: 10px; /* Rounded corners for a sleek look */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Soft shadow */
+    transition: transform 0.3s ease;
+}
+
+
+.right-section {
+    width: 50%;
+    max-width: 400px;
+    padding: 20px;
+    background: linear-gradient(135deg, #6e7c7c, #a1a8a8); /* Gray Gradient */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-sizing: border-box;
+    overflow-y: auto;
+    position: absolute;
+    top: 0;
+    right: -90%; /* Initially Hidden */
+    height: 100%;
+    border: 2px solid #ccc; /* Gray border */
+    border-radius: 15px 0 0 15px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+    transition: right 0.3s ease;
+}
+
+
+/* When sidebar is open */
+.main-container.sidebar-open .right-section {
+    right: 0;
+}
+
+
+/* Profile Photo */
+.profile-photo {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 4px solid #0ff;
+    margin-bottom: 10px; /* Adjusted margin to create space for verification below */
+    object-fit: cover;
+    box-shadow: 0 4px 15px rgba(0, 255, 255, 0.5);
+}
+
+/* Verified info container */
+.profile-container {
+    display: flex;
+    flex-direction: column; /* Stack the text and icon vertically */
+    align-items: center;
+    margin-top: 10px; /* Added top margin for some space between profile photo and verified info */
+}
+
+.verified-info {
+    display: none; /* Initially hidden */
+    align-items: center; /* Horizontally align text and icon */
+    margin-top: 10px; /* Spacing between profile photo and verification section */
+}
+
+.verified-account-text {
+    font-size: 10px; /* Smaller text size */
+    color: #007bff; /* A lighter blue for better contrast */
+    margin-right: 15px; /* Increased distance between text and icon */
+}
+
+.verified-icon {
+    font-size: 12px; /* Slightly smaller icon */
+    color: #007bff; /* Same blue as text for consistency */
+}
+
+
+/* Search Button */
+.search-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    background: radial-gradient(circle, #0ff, #005);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 22px;
+    box-shadow: 0 4px 15px rgba(0, 255, 255, 0.4);
+    transition: transform 0.2s, box-shadow 0.3s;
+}
+.search-button:hover {
+    transform: scale(1.2);
+    box-shadow: 0 6px 20px rgba(0, 255, 255, 0.6);
+}
+
+/* Account Info Section */
+.account-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    background: linear-gradient(135deg, #6a5d4d, #7f8c8d); /* Warm brown gradient */
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    border: 1px solid #444;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+    color: #fff;
+}
+
+/* User Information */
+.account-info h3 {
+    font-size: 28px;
+    font-weight: bold;
+    color: #e74c3c; /* Vibrant red */
+    letter-spacing: 1px;
+    margin: 10px 0;
+}
+
+.account-info p {
+    font-size: 18px;
+    color: #fff;
+    margin: 5px 0;
+    transition: color 0.3s, transform 0.3s;
+}
+
+.account-info p:hover {
+    color: #e74c3c; /* Change to red on hover */
+    transform: scale(1.05);
+}
+
+/* Logout Button */
+#logoutButton {
+    width: 160px;
+    height: 50px;
+    background: linear-gradient(135deg, #f39c12, #f1c40f); /* Golden gradient */
+    color: white;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    text-transform: uppercase;
+    box-shadow: 0 4px 10px rgba(243, 156, 18, 0.6); /* Soft golden glow */
+    transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+/* Hover effect */
+#logoutButton:hover {
+    background: linear-gradient(135deg, #f1c40f, #f39c12); /* Reverse gradient */
+    transform: scale(1.05); /* Slight hover zoom */
+    box-shadow: 0 6px 15px rgba(243, 156, 18, 0.8); /* Brighter golden glow */
+}
+
+/* Active/Pressed state */
+#logoutButton:active {
+    transform: scale(0.95); /* Slight press-in effect */
+    box-shadow: none;
+}
+
+/* Icon inside the logout button */
+#logoutButton i {
+    font-size: 20px;
+    color: #fff; /* Keep the icon white */
+}
+
+/* Scrollable chat items container */
+#chatItemsContainer {
+    flex-grow: 1;
+    overflow-y: auto; /* Enables scrolling */
+    padding: 10px;
+}
+
+.add-members-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.dialog-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    width: 400px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+
+/* Button Styling */
+button {
+    padding: 12px 24px;
+    margin-top: 20px;
+    font-size: 16px;
+    font-weight: bold;
+    background: linear-gradient(135deg, #ff6f61, #ff914d);
+    border: none;
+    border-radius: 30px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(255, 111, 97, 0.5);
+}
+
+button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(255, 111, 97, 0.7);
+}
+
+button:active {
+    transform: scale(0.95);
+    box-shadow: none;
+}
+
+button:disabled {
+    background-color: #ccc;
+}
+/* Chat item container */
+.chat-item {
+    display: flex;
+    align-items: center;
+    padding: 6px 12px; /* Reduced padding for compactness */
+    margin-bottom: 6px; /* Reduced margin between items */
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    font-size: 14px; /* Slightly smaller font for a more compact feel */
+}
+
+/* Hover effect */
+.chat-item:hover {
+    background-color: #f0f8ff; /* Lighter hover background */
+    transform: translateY(-2px); /* Subtle lift effect */
+}
+
+/* Selected state */
+.chat-item.selected {
+    background-color: #d1ecf1;
+    border-color: #17a2b8;
+}
+
+/* Profile photo */
+.profile-photo {
+    width: 32px; /* Reduced size */
+    height: 32px; /* Reduced size */
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 10px; /* Reduced margin */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Chat item content */
+.chat-item-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+/* Name row styling */
+.chat-item-content .name {
+    font-size: 14px; /* Slightly smaller font size */
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 3px; /* Reduced margin for compactness */
+}
+
+/* Last message */
+.chat-item-content .lastMessage {
+    font-size: 12px; /* Smaller font size for last message */
+    color: #555;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    flex-grow: 1;
+}
+
+/* Timestamp */
+.chat-item-content .timestamp {
+    font-size: 10px; /* Smaller timestamp font */
+    color: #888;
+    margin-top: 2px; /* Reduced margin */
+}
+
+/* Timestamp container to prevent overflow */
+.chat-item-content .timestamp-container {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+}
+
+/* Chat container for overall list */
+.chat-items-container {
+    max-height: 220px; /* More compact height */
+    overflow-y: auto;
+    margin: 8px 0; /* Reduced margin */
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 6px; /* Slightly less padding */
+}
+
+
+.left-section {
+    width: 50%; /* Take up half of the screen width */
+    padding: 20px;
+    background: linear-gradient(to bottom, #e3f2fd, #fce4ec);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    box-sizing: border-box;
+    border-right: 2px solid #ddd;
+}
+
+
+/* Chat type selection container */
+.chat-type-selection {
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+    background: #f8f9fa; /* Subtle background */
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Soft shadow */
+}
+
+/* Chat type button */
+.chat-type-btn {
+    flex: 1;
+    padding: 12px;
+    background: #e3e7ed; /* Light modern background */
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* Hover effect */
+.chat-type-btn:hover {
+    background: #d6dae2; /* Subtle hover change */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Active button */
+.chat-type-btn.active {
+    background: #007bff; /* Premium blue */
+    color: #fff;
+    box-shadow: 0 6px 12px rgba(0, 123, 255, 0.3);
+}
+
+/* Active hover effect */
+.chat-type-btn.active:hover {
+    background: #0069d9;
+}
+
+/* Icon styles */
+.chat-type-btn i {
+    font-size: 16px;
+}
+
+
+/* Background overlay for the dialog */
+.create-group-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6); /* Darker background for better contrast */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    transition: opacity 0.3s ease-in-out; /* Smooth transition */
+}
+
+/* Content inside the dialog */
+.create-group-content {
+    background: #ffffff; /* White background */
+    padding: 25px;
+    border-radius: 12px; /* Rounded corners */
+    width: 320px;
+    text-align: center;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1); /* Subtle shadow for 3D effect */
+    animation: slideIn 0.5s ease-out; /* Slide-in animation for the content */
+}
+.no-partner-message {
+    text-align: center;
+    margin: 20px auto;
+    padding: 20px;
+    background: #fef9e7;
+    border: 1px solid #f1c40f;
+    border-radius: 8px;
+    color: #d35400;
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Animation for the dialog content */
+@keyframes slideIn {
+    0% {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Title of the dialog */
+.create-group-content h2 {
+    font-size: 24px;
+    color: #333; /* Darker color for better readability */
+    margin-bottom: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Input field for group name */
+.create-group-content input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    color: #555;
+    transition: border-color 0.3s ease; /* Smooth border transition */
+}
+
+/* Focus effect on the input */
+.create-group-content input:focus {
+    border-color: #28a745; /* Green border when focused */
+    outline: none;
+}
+savebutton, cancelbutton {
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-align: center;
+}
+
+savebutton {
+    background-color: #4caf50; /* Green color for Save */
+    color: #fff; /* White text */
+    box-shadow: 0 4px 6px rgba(0, 128, 0, 0.3);
+}
+
+savebutton:hover {
+    background-color: #45a049; /* Slightly darker green */
+    transform: scale(1.05); /* Add hover effect */
+    box-shadow: 0 6px 8px rgba(0, 128, 0, 0.5);
+}
+
+cancelbutton {
+    background-color: #f44336; /* Red color for Cancel */
+    color: #fff; /* White text */
+    box-shadow: 0 4px 6px rgba(255, 0, 0, 0.3);
+}
+
+cancelbutton:hover {
+    background-color: #e53935; /* Slightly darker red */
+    transform: scale(1.05); /* Add hover effect */
+    box-shadow: 0 6px 8px rgba(255, 0, 0, 0.5);
+}
+
+/* General focus styles for accessibility */
+savebutton:focus, cancelbutton:focus {
+    outline: none;
+    box-shadow: 0 0 3px 3px rgba(0, 0, 255, 0.4);
+}
+
+/* Buttons container */
+.dialog-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px; /* Space between buttons */
+}
+
+/* Common button styles */
+.dialog-buttons button {
+    padding: 12px 20px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s, transform 0.2s ease;
+}
+
+/* Button for saving */
+.dialog-buttons #saveGroupButton {
+    background-color: #28a745; /* Green for Save */
+    color: white;
+}
+
+.dialog-buttons #saveGroupButton:hover {
+    background-color: #218838; /* Darker green on hover */
+    transform: scale(1.05); /* Slight scale effect on hover */
+}
+
+/* Button for canceling */
+.dialog-buttons #cancelGroupButton {
+    background-color: #dc3545; /* Red for Cancel */
+    color: white;
+}
+
+.dialog-buttons #cancelGroupButton:hover {
+    background-color: #c82333; /* Darker red on hover */
+    transform: scale(1.05); /* Slight scale effect on hover */
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 500px) {
+    .create-group-content {
+        width: 280px; /* Adjust width for smaller screens */
+    }
+
+    .dialog-buttons {
+        flex-direction: column; /* Stack buttons on smaller screens */
+        gap: 10px;
+    }
+
+    .dialog-buttons button {
+        width: 100%; /* Full width buttons */
+    }
+}
+.select-chat-item {
+    display: flex;
+    align-items: center; /* Align profile photo and name vertically */
+    padding: 10px;
+    margin-bottom: 10px;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    gap: 15px; /* Space between profile photo and name */
+}
+
+.select-chat-item:hover {
+    background-color: #f0f8ff;
+    transform: scale(1.02); /* Slight hover effect */
+}
+.select-profile-photo {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%; /* Makes the image circular */
+    object-fit: cover; /* Ensures the image scales nicely */
+}
+.select-chat-item.selected {
+    background-color: #d1ecf1;
+    border-color: #17a2b8;
+}
+.select-name {
+    font-weight: bold;
+    color: #333;
+    font-size: 16px;
+    line-height: 1.2;
+}
+/* "Echo" label */
+.select-echo {
+    color: blue;
+    font-size: 12px; /* Slightly larger font size */
+    margin-left: 3px; /* Reduced margin for closer spacing */
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.create-post-btn {
+    background: linear-gradient(45deg, #ff416c, #ff4b2b);
+    border: none;
+    font-size: 18px;
+    color: white;
+    cursor: pointer;
+    margin-left: 10px;
+    padding: 12px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0 4px 10px rgba(255, 65, 108, 0.5);
+    position: relative;
+    overflow: hidden;
+}
+
+.create-post-btn i {
+    transition: transform 0.3s ease-in-out;
+}
+
+/* Hover effect */
+.create-post-btn:hover {
+    background: linear-gradient(45deg, #ff512f, #dd2476);
+    box-shadow: 0 6px 15px rgba(255, 65, 108, 0.8);
+    transform: scale(1.1);
+}
+
+/* Inner ripple effect */
+.create-post-btn::before {
+    content: "";
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 10%, transparent 60%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    transition: transform 0.4s ease-in-out;
+    border-radius: 50%;
+}
+
+.create-post-btn:hover::before {
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* Icon animation on hover */
+.create-post-btn:hover i {
+    transform: rotate(180deg);
+}
+
+/* Verification icon */
+.select-verification {
+    width: 16px; /* Slightly larger size */
+    height: 16px;
+    margin-left: 2px; /* Reduced margin for closer spacing */
+    vertical-align: middle;
+}
+/* Context Menu Styling */
+.context-menu {
+    position: absolute;
+    background-color: #ffffff;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2), 0px 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    z-index: 1000;
+    overflow: hidden;
+    min-width: 180px;
+    border: 1px solid #e0e0e0;
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+.context-menu-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    cursor: pointer;
+    font-size: 15px;
+    color: #333;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.context-menu-item i {
+    margin-right: 12px;
+    font-size: 18px;
+    color: #6c757d;
+    transition: color 0.3s ease;
+}
+
+.context-menu-item:hover {
+    background-color: #f8f9fa;
+    color: #0056b3;
+}
+
+.context-menu-item:hover i {
+    color: #0056b3;
+}
+
+.context-menu-item:not(:last-child) {
+    border-bottom: 1px solid #e9ecef;
+}
+
+/* Add subtle entry animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.explore-host-btn {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    background: linear-gradient(45deg, #ff6b6b, #ffa502, #fffa65, #1e90ff, #6a89cc);
+    background-size: 200% 200%;
+    animation: gradientBG 3s ease infinite;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.explore-host-btn:hover {
+    transform: scale(1.05);
+    opacity: 0.9;
+}
+
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+
+    </style>
+</head>
+<body>
+   <div class="main-container">
+       <button id="sidebarToggle" class="sidebar-toggle">
+        <i class="fas fa-bars"></i> <!-- Sidebar icon -->
+    </button>
+<!-- Dialog for Creating Group -->
+<div id="createGroupDialog" class="create-group-dialog" style="display: none;">
+    <div class="create-group-content">
+        <h2>Create Group</h2>
+        <input type="text" id="groupName" placeholder="Enter group name">
+        
+        <div class="dialog-buttons">
+            <button id="saveGroupButton">Save</button>
+            <button id="cancelGroupButton">Cancel</button>
+        </div>
+    </div>
+</div>
+<!-- Start Exploring Host Button -->
+<button id="exploreHostBtn" class="explore-host-btn">Start Exploring Host</button>
+
+        <!-- Left section with profile and chat items -->
+        <div class="left-section">
+    <!-- Chat Type Selection -->
+    <div class="chat-type-selection">
+        <button id="personalChatBtn" class="chat-type-btn active">
+            <i class="fas fa-user"></i> Personal Chat
+        </button>
+        <button id="groupChatBtn" class="chat-type-btn">
+            <i class="fas fa-users"></i> Group Chat
+        </button>
+    </div>
+
+    <!-- Chat Items Container -->
+    <div id="chatItemsContainer"></div>
+
+</div>
+
+
+
+
+      <!-- Right section with account information -->
+<div class="right-section">
+<button id="searchButton" class="search-button" onclick="navigateToSearch()">
+    <i class="fas fa-search"></i>
+</button>
+ <div class="create-button-container">
+        <button id="createButton" class="create-button">
+            <i class="fas fa-plus-circle"></i> <!-- Plus icon for create -->
+        </button>
+    </div>
+    <div class="account-info">
+        <div class="profile-container">
+            <img id="currentUserProfilePhoto" class="profile-photo" src="user_1077114.png" alt="Profile Photo">
+            <div class="verified-info">
+                <p id="verifiedAccount" class="verified-account-text" style="font-size: 10px; color: #007bff; margin-right: 15px;">Verified Account</p>
+<i class="fas fa-check-circle verified-icon" style="font-size: 12px; color: #007bff;"></i>
+
+            </div>
+        </div>
+        <!-- User information -->
+        <h3 id="userName">Loading...</h3>
+        <p id="userAge">Loading...</p>
+        <p id="userRegion">Loading...</p>
+        <p id="userUsername">Loading...</p>
+        <p id="userGender">Loading...</p>
+<button id="create-post-btn" class="create-post-btn">
+        <i class="fas fa-plus"></i>
+    </button>
+        <!-- Logout button -->
+        <button id="logoutButton">
+    <i class="fas fa-sign-out-alt"></i> Logout
+</button>
+
+    </div>
+</div>
+
+    </div>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBcTEVvxXmv5N8dJav4xNDRy5hXZRjVeM4",
+            authDomain: "chatflow-59776.firebaseapp.com",
+            databaseURL: "https://chatflow-59776-default-rtdb.firebaseio.com",
+            projectId: "chatflow-59776",
+            storageBucket: "chatflow-59776.appspot.com",
+            messagingSenderId: "549003131640",
+            appId: "1:549003131640:web:3f4a7b8cef4c0d8a2b990d",
+            measurementId: "G-V2180PR5CR"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const firestore = firebase.firestore();
+
+// Load profile photo of the current user
+firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
+        const userEmail = user.email;
+loadUserProfile(userEmail);
+checkVerifiedOrNot(userEmail);
+const profilesPhotoRef = firestore.collection("profilesphoto");
+
+profilesPhotoRef.where("uploaderEmail", "==", userEmail)
+    .get()
+    .then((querySnapshot) => {
+        let latestPhotoUrl = "user_1077114.png"; // Default profile photo
+        let latestTimestamp = 0;
+
+        querySnapshot.forEach((doc) => {
+            const timestamp = doc.data().timestamp || 0;
+            const photoUrl = doc.data().downloadUrl;
+
+            if (timestamp > latestTimestamp) {
+                latestTimestamp = timestamp;
+                latestPhotoUrl = photoUrl;
+            }
+        });
+
+        document.getElementById("currentUserProfilePhoto").src = latestPhotoUrl;
+    })
+    .catch((error) => {
+        console.error("Error fetching profile photo:", error);
+    });
+document.getElementById("create-post-btn").addEventListener("click", function() {
+    window.location.href = "post_social.html";
+});
+
+document.getElementById("exploreHostBtn").addEventListener("click", function() {
+    window.location.href = "host.html";
+});
+
+        // Load Personal Chat Messages
+       const personalChatBtn = document.getElementById('personalChatBtn');
+const groupChatBtn = document.getElementById('groupChatBtn');
+// Show personal chat by default
+personalChatBtn.addEventListener('click', () => {
+    loadPersonalChat(userEmail); // Function to load personal chats
+    personalChatBtn.classList.add('active');
+    groupChatBtn.classList.remove('active');
+});
+
+// Show group chat
+groupChatBtn.addEventListener('click', () => {
+    loadGroupChat(userEmail); 
+    groupChatBtn.classList.add('active');
+    personalChatBtn.classList.remove('active');
+});
+
+// Default load of personal chats when the page is loaded
+personalChatBtn.click();
+
+
+    } else {
+        window.location.href = "index.html";
+    }
+});
+// Get the elements
+const createButton = document.getElementById("createButton");
+const createGroupDialog = document.getElementById("createGroupDialog");
+const cancelGroupButton = document.getElementById("cancelGroupButton");
+const saveGroupButton = document.getElementById("saveGroupButton");
+const groupNameInput = document.getElementById("groupName");
+
+// Show the dialog when create button is clicked
+createButton.addEventListener("click", () => {
+    createGroupDialog.style.display = "flex";  // Show the dialog
+});
+
+
+
+// Close the dialog when cancel is clicked
+cancelGroupButton.addEventListener("click", () => {
+    createGroupDialog.style.display = "none";  // Hide the dialog
+});
+
+// Save the group and member information to Firebase when save is clicked
+saveGroupButton.addEventListener("click", async () => {
+    const groupName = groupNameInput.value.trim();
+    
+    if (groupName === "") {
+        alert("Please enter a group name");
+        return;
+    }
+
+    const currentUserEmail = firebase.auth().currentUser.email; // Get current user email
+    const timestamp = Date.now(); // Current timestamp
+
+    try {
+        // Create a new group in the 'grouping' collection
+        const groupRef = await firestore.collection("grouping").add({
+            groupname: groupName,
+            owner: currentUserEmail,
+            timestamp: timestamp
+        });
+
+        // Create memberId (UUID.randomUUID().toString()) for the current user
+        const memberId = generateUUID(); // Assuming generateUUID() creates a UUID string
+        const memberRef = groupRef.collection("members").doc(memberId);
+
+        // Save the current user's email and timestamp under members subcollection
+        await memberRef.set({
+            email: currentUserEmail,
+            timestamp: timestamp
+        });
+
+        alert("Group created successfully!");
+        createGroupDialog.style.display = "none";  // Close the dialog after saving
+
+    } catch (error) {
+        console.error("Error creating group: ", error);
+        alert("Error creating group");
+    }
+});
+
+// Utility function to generate UUID (replace this with any UUID generation logic you want)
+function generateUUID() {
+    // Example UUID generation (you can replace this with a real UUID generation method)
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+function checkVerifiedOrNot(userEmail) {
+    // Reference to the 'verificationbridge' collection in Firestore
+    const verificationRef = firestore.collection("verificationbridge");
+
+    // Query the collection to find the document with the userEmail
+    verificationRef.where("email", "==", userEmail)
+        .get()
+        .then((snapshot) => {
+            const verifiedInfo = document.querySelector(".verified-info");
+            if (!snapshot.empty) {
+                // If document exists, the user is verified
+                verifiedInfo.style.display = "flex"; // Show the entire verified-info section
+            } else {
+                // If no matching document is found, hide the verified-info section
+                verifiedInfo.style.display = "none";
+            }
+        })
+        .catch((error) => {
+            console.error("Error checking verification status:", error);
+        });
+}
+
+function navigateToSearch() {
+    // Add a fade-out effect before navigation
+    document.body.classList.add('fade-out');
+
+    // Wait for the animation to complete before redirecting
+    setTimeout(() => {
+        window.location.href = "search.html";
+    }, 500); // Match this duration to the CSS animation timing
+}
+function loadPersonalChat(userEmail) {
+    const chatContainer = document.getElementById("chatItemsContainer");
+    chatContainer.innerHTML = "";
+
+    const messagesRef = firestore.collection("messages");
+
+    // Query for messages where current user is either sender or receiver
+    messagesRef.where("senderEmail", "==", userEmail)
+        .get()
+        .then((querySnapshot) => {
+            const chatItemsMap = {};
+
+            // Processing messages where the current user is the sender
+            querySnapshot.forEach((doc) => {
+                const receiverEmail = doc.data().receiverEmail;
+                const sentTime = doc.data().sentTime;
+                const text = doc.data().text;
+
+                if (!chatItemsMap[receiverEmail]) {
+                    chatItemsMap[receiverEmail] = { lastMessage: "", partnerName: "", partnerPhotoUrl: "", sentTime: 0 };
+                }
+
+                if (sentTime > chatItemsMap[receiverEmail].sentTime) {
+                    chatItemsMap[receiverEmail].lastMessage = text || "No message";
+                    chatItemsMap[receiverEmail].sentTime = sentTime;
+                }
+            });
+
+            // Now, fetch messages where current user is the receiver
+            messagesRef.where("receiverEmail", "==", userEmail)
+                .get()
+                .then((querySnapshot) => {
+
+                    // Processing messages where the current user is the receiver
+                    querySnapshot.forEach((doc) => {
+                        const senderEmail = doc.data().senderEmail;
+                        const sentTime = doc.data().sentTime;
+                        const text = doc.data().text;
+
+                        if (!chatItemsMap[senderEmail]) {
+                            chatItemsMap[senderEmail] = { lastMessage: "", partnerName: "", partnerPhotoUrl: "", sentTime: 0 };
+                        }
+
+                        if (sentTime > chatItemsMap[senderEmail].sentTime) {
+                            chatItemsMap[senderEmail].lastMessage = text || "No message";
+                            chatItemsMap[senderEmail].sentTime = sentTime;
+                        }
+                    });
+
+                    // Now, prepare the sorted list
+                    const sortedChatItems = Object.keys(chatItemsMap)
+                        .map(senderEmail => ({
+                            senderEmail,
+                            ...chatItemsMap[senderEmail]
+                        }))
+                        .sort((a, b) => b.sentTime - a.sentTime);
+
+                    // Display the sorted chat items
+                    sortedChatItems.forEach(chatData => {
+                        const senderEmail = chatData.senderEmail;
+
+                        const profilesPhotoRef = firestore.collection("profilesphoto");
+                        profilesPhotoRef.where("uploaderEmail", "==", senderEmail).get().then((photoSnapshot) => {
+                            let partnerPhotoUrl = "user_1077114.png"; // Default profile image
+                            photoSnapshot.forEach((photoDoc) => {
+                                partnerPhotoUrl = photoDoc.data().downloadUrl;
+                            });
+
+                            const namesRef = firestore.collection("names");
+                            namesRef.where("email", "==", senderEmail).get().then((nameSnapshot) => {
+                                if (nameSnapshot.empty) return;
+
+                                let partnerName = "";
+                                nameSnapshot.forEach((nameDoc) => {
+                                    partnerName = nameDoc.data().name || "No Name";
+                                });
+
+                                const verificationRef = firestore.collection("verificationbridge");
+                                verificationRef.where("email", "==", senderEmail).get().then((verificationSnapshot) => {
+                                    const isVerified = !verificationSnapshot.empty;
+
+                                    const chatItem = document.createElement("div");
+                                    chatItem.classList.add("chat-item");
+                                    chatItem.id = senderEmail;
+                                    chatItem.addEventListener("contextmenu", (e) => {
+                                        e.preventDefault();
+                                        showContextMenu(e, userEmail, senderEmail, chatItem);
+                                    });
+                                    chatItem.addEventListener("click", () => {
+                                        window.location.href = `chat_layout.html?name=${encodeURIComponent(partnerName)}&email=${encodeURIComponent(senderEmail)}`;
+                                    });
+
+                                    const partnerPhoto = document.createElement("img");
+                                    partnerPhoto.classList.add("profile-photo");
+                                    partnerPhoto.src = partnerPhotoUrl;
+                                    chatItem.appendChild(partnerPhoto);
+
+                                    const info = document.createElement("div");
+                                    info.classList.add("chat-item-content");
+
+                                    const nameRow = document.createElement("div");
+                                    nameRow.style.display = "flex";
+                                    nameRow.style.alignItems = "center";
+
+                                    const name = document.createElement("span");
+                                    name.classList.add("name");
+                                    name.innerText = partnerName;
+                                    nameRow.appendChild(name);
+
+                                    if (isVerified) {
+                                        const echoLabel = document.createElement("span");
+                                        echoLabel.innerText = "Falcon S";
+                                        echoLabel.style.color = "blue";
+                                        echoLabel.style.marginLeft = "8px";
+                                        echoLabel.style.fontSize = "12px";
+                                        echoLabel.style.fontWeight = "bold";
+
+                                        const verificationIcon = document.createElement("img");
+                                        verificationIcon.src = "verification.png";
+                                        verificationIcon.style.width = "14px";
+                                        verificationIcon.style.height = "14px";
+                                        verificationIcon.style.marginLeft = "5px";
+
+                                        nameRow.appendChild(echoLabel);
+                                        nameRow.appendChild(verificationIcon);
+                                    }
+
+                                    info.appendChild(nameRow);
+
+                                    const lastMessage = document.createElement("p");
+                                    lastMessage.classList.add("lastMessage");
+
+                                    // Check if the last message is an image or video URL
+                                    if (isImageUrl(chatData.lastMessage)) {
+                                        lastMessage.innerText = "Image message";
+                                        lastMessage.style.color = "blue";
+                                    } else if (isVideoUrl(chatData.lastMessage)) {
+                                        lastMessage.innerText = "Video message";
+                                        lastMessage.style.color = "blue";
+                                    } else {
+                                        lastMessage.innerText = chatData.lastMessage || "No message";
+                                    }
+
+                                    info.appendChild(lastMessage);
+
+                                    const timestamp = document.createElement("span");
+                                    timestamp.classList.add("timestamp");
+                                    timestamp.innerText = new Date(chatData.sentTime).toLocaleString();
+                                    info.appendChild(timestamp);
+
+                                    chatItem.appendChild(info);
+                                    chatContainer.appendChild(chatItem);
+                                });
+                            });
+                        });
+                    });
+
+                })
+                .catch((error) => {
+                    console.error("Error fetching messages:", error);
+                });
+        })
+        .catch((error) => {
+            console.error("Error fetching messages:", error);
+        });
+}
+
+function deleteChat(userEmail, receiverEmail, chatItem) {
+    const messagesRef = firestore.collection("messages");
+
+    messagesRef.where("senderEmail", "==", userEmail)
+        .get()
+        .then((querySnapshot) => {
+            const batch = firestore.batch();
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                if (data.receiverEmail === receiverEmail) {
+                    batch.delete(doc.ref);
+                }
+            });
+
+            return messagesRef.where("senderEmail", "==", receiverEmail).get().then((reverseSnapshot) => {
+                reverseSnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    if (data.receiverEmail === userEmail) {
+                        batch.delete(doc.ref);
+                    }
+                });
+
+                return batch.commit();
+            });
+        })
+        .then(() => {
+            chatItem.remove();
+            alert("Chat deleted successfully.");
+        })
+        .catch((error) => {
+            console.error("Error deleting chat:", error);
+        });
+}
+
+function copyChat(userEmail, receiverEmail) {
+    const messagesRef = firestore.collection("messages");
+
+    messagesRef.where("senderEmail", "==", userEmail)
+        .get()
+        .then((querySnapshot) => {
+            const messages = [];
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                if (data.receiverEmail === receiverEmail) {
+                    messages.push(`${data.sentTime}: ${data.text}`);
+                }
+            });
+
+            return messagesRef.where("senderEmail", "==", receiverEmail).get().then((reverseSnapshot) => {
+                reverseSnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    if (data.receiverEmail === userEmail) {
+                        messages.push(`${data.sentTime}: ${data.text}`);
+                    }
+                });
+
+                // Copy messages to clipboard
+                navigator.clipboard.writeText(messages.join("\n"))
+                    .then(() => alert("Messages copied to clipboard."))
+                    .catch((err) => console.error("Error copying messages:", err));
+            });
+        })
+        .catch((error) => {
+            console.error("Error fetching messages for copy:", error);
+        });
+}
+document.getElementById("sidebarToggle").addEventListener("click", function () {
+    const mainContainer = document.querySelector(".main-container");
+    mainContainer.classList.toggle("sidebar-open");
+
+    // Change icon between sidebar and back
+    this.innerHTML = mainContainer.classList.contains("sidebar-open")
+        ? '<i class="fas fa-arrow-left" style="color: black;"></i>' // Back icon
+        : '<i class="fas fa-bars" style="color: black;"></i>'; // Sidebar icon
+});
+
+
+function showContextMenu(event, userEmail, receiverEmail, chatItem) {
+    // Prevent default context menu
+    event.preventDefault();
+
+    // Remove any existing context menu
+    const existingMenu = document.querySelector(".context-menu");
+    if (existingMenu) existingMenu.remove();
+
+    // Create the context menu container
+    const contextMenu = document.createElement("div");
+    contextMenu.classList.add("context-menu");
+
+    // Create Delete option
+    const deleteOption = document.createElement("div");
+    deleteOption.classList.add("context-menu-item");
+    deleteOption.innerHTML = `<i class="fas fa-trash-alt"></i> Delete`;
+    deleteOption.addEventListener("click", () => {
+        deleteChat(userEmail, receiverEmail, chatItem);
+        contextMenu.remove(); // Remove menu after action
+    });
+    contextMenu.appendChild(deleteOption);
+
+    // Create Copy option
+    const copyOption = document.createElement("div");
+    copyOption.classList.add("context-menu-item");
+    copyOption.innerHTML = `<i class="fas fa-copy"></i> Copy`;
+    copyOption.addEventListener("click", () => {
+        copyChat(userEmail, receiverEmail);
+        contextMenu.remove(); // Remove menu after action
+    });
+    contextMenu.appendChild(copyOption);
+
+    // Append context menu to the document body
+    document.body.appendChild(contextMenu);
+
+    // Position the menu at the cursor's location
+    contextMenu.style.top = `${event.clientY}px`;
+    contextMenu.style.left = `${event.clientX}px`;
+
+    // Remove menu on outside click
+    document.addEventListener("click", () => contextMenu.remove(), { once: true });
+}
+
+ function isImageUrl(text) {
+    return text.startsWith("https://firebasestorage.googleapis.com") && text.includes("/sentphotos%2F");
+}
+
+function isVideoUrl(text) {
+    return text.startsWith("https://firebasestorage.googleapis.com") && text.includes("/sentvideos%2F");
+}
+
+function showAddMembersDialog(groupId, groupName) {
+    // Create the dialog container
+    const dialogContainer = document.createElement("div");
+    dialogContainer.classList.add("add-members-dialog");
+
+    const dialogContent = document.createElement("div");
+    dialogContent.classList.add("dialog-content");
+
+    const dialogTitle = document.createElement("h3");
+    dialogTitle.textContent = `Add Members to ${groupName}`;
+    dialogContent.appendChild(dialogTitle);
+
+    const chatItemsContainer = document.createElement("div");
+    chatItemsContainer.classList.add("chat-items-container");
+
+    // Fetch and display personal chats
+    loadPersonalChatForAddingMembers(chatItemsContainer, groupId);
+
+    // Buttons
+    const saveButton = document.createElement("savebutton");
+    saveButton.textContent = "Save";
+    saveButton.style.display = "none"; // Initially hidden
+    saveButton.addEventListener("click", function () {
+        saveSelectedMembers(groupId);
+    });
+
+    const cancelButton = document.createElement("cancelbutton");
+    cancelButton.textContent = "Cancel";
+    cancelButton.addEventListener("click", function () {
+        dialogContainer.remove();
+    });
+
+    dialogContent.appendChild(chatItemsContainer);
+    dialogContent.appendChild(saveButton);
+    dialogContent.appendChild(cancelButton);
+
+    dialogContainer.appendChild(dialogContent);
+    document.body.appendChild(dialogContainer);
+
+    // Show save button only when there is at least one selected item
+    chatItemsContainer.addEventListener("click", () => {
+        const selectedItems = chatItemsContainer.querySelectorAll(".select-chat-item.selected");
+        saveButton.style.display = selectedItems.length > 0 ? "inline-block" : "none";
+    });
+}
+function loadPersonalChatForAddingMembers(container, groupId) {
+    const db = firebase.firestore();
+    const chatRef = db.collection("messages");
+    const verificationRef = db.collection("verificationbridge");
+    const userEmail = firebase.auth().currentUser.email;
+
+    const addedEmails = new Set(); // To avoid duplicates
+    let pendingPromises = []; // Track promises to determine completion
+
+    chatRef.where("senderEmail", "==", userEmail)
+        .get()
+        .then((querySnapshot) => {
+            querySnapshot.forEach((doc) => {
+                const receiverEmail = doc.data().receiverEmail;
+
+                if (!addedEmails.has(receiverEmail)) {
+                    addedEmails.add(receiverEmail); // Add to the set to prevent duplicates
+
+                    const promise = isMemberInGroup(groupId, receiverEmail).then((isMember) => {
+                        if (!isMember) {
+                            return fetchUserProfile(receiverEmail).then(({ name, photoUrl }) => {
+                                // Create the select-chat-item element
+                                const chatItem = document.createElement("div");
+                                chatItem.classList.add("select-chat-item");
+                                chatItem.id = receiverEmail;
+
+                                const profilePhoto = document.createElement("img");
+                                profilePhoto.classList.add("select-profile-photo");
+                                profilePhoto.src = photoUrl;
+
+                                const nameElement = document.createElement("span");
+                                nameElement.classList.add("select-name");
+                                nameElement.innerText = name;
+
+                                // Blue "Echo" label
+                                const echoLabel = document.createElement("span");
+                                echoLabel.classList.add("select-echo");
+                                echoLabel.innerText = "Echo";
+                                echoLabel.style.display = "none"; // Initially hidden
+
+                                // Verification icon
+                                const verificationIcon = document.createElement("img");
+                                verificationIcon.classList.add("select-verification");
+                                verificationIcon.src = "verification.jpg";
+                                verificationIcon.style.display = "none"; // Initially hidden
+
+                                // Check verificationbridge collection
+                                const verificationPromise = verificationRef
+                                    .where("email", "==", receiverEmail)
+                                    .get()
+                                    .then((verificationSnapshot) => {
+                                        if (!verificationSnapshot.empty) {
+                                            echoLabel.style.display = "inline";
+                                            verificationIcon.style.display = "inline";
+                                        }
+                                    });
+
+                                pendingPromises.push(verificationPromise);
+
+                                // Append elements to the select-chat-item
+                                chatItem.appendChild(profilePhoto);
+                                chatItem.appendChild(nameElement);
+                                chatItem.appendChild(echoLabel);
+                                chatItem.appendChild(verificationIcon);
+
+                                // Click event to toggle selection
+                                chatItem.addEventListener("click", function () {
+                                    chatItem.classList.toggle("selected");
+                                });
+
+                                // Append chat item to the container
+                                container.appendChild(chatItem);
+                            });
+                        }
+                    });
+
+                    pendingPromises.push(promise);
+                }
+            });
+
+            // Wait for all promises to resolve
+            return Promise.all(pendingPromises);
+        })
+        .then(() => {
+            // Check if the container is still empty after all processing
+            if (container.childElementCount === 0) {
+                displayNoPartnerMessage(container);
+            }
+        })
+        .catch((error) => {
+            console.error("Error fetching personal chats:", error);
+        });
+}
+
+function displayNoPartnerMessage(container) {
+    // Clear the container
+    container.innerHTML = "";
+
+    // Create the message element
+    const messageElement = document.createElement("div");
+    messageElement.classList.add("no-partner-message");
+
+    // Set the message text
+    messageElement.innerHTML = `
+        <p>No partner to add!</p>
+        <p>That is why, send to other new users and add them to this group!</p>
+    `;
+
+    // Append the message to the container
+    container.appendChild(messageElement);
+}
+
+
+
+function saveSelectedMembers(groupId) {
+    const selectedChatItems = document.querySelectorAll(".chat-item.selected");
+    const db = firebase.firestore();
+    const membersCollection = db.collection("grouping").doc(groupId).collection("members");
+
+    selectedChatItems.forEach(chatItem => {
+        const email = chatItem.id;
+        const memberId = generateUUID();
+
+        membersCollection.doc(memberId).set({
+            email: email,
+            timestamp: Date.now() // Save current time in milliseconds
+        }).then(() => {
+            console.log(`Member ${email} added successfully!`);
+        }).catch(error => {
+            console.error(`Error adding member ${email}:`, error);
+        });
+    });
+
+    // Close the dialog after saving
+    document.querySelector(".add-members-dialog").remove();
+}
+
+
+function fetchUserProfile(email) {
+    const db = firebase.firestore();
+    const namesRef = db.collection("names");
+    const profilesPhotoRef = db.collection("profilesphoto");
+
+    return Promise.all([
+        getLatestName(namesRef, email),
+        getLatestProfilePhoto(profilesPhotoRef, email)
+    ])
+    .then(([name, photoUrl]) => {
+        return { name, photoUrl };
+    })
+    .catch((error) => {
+        console.error("Error fetching profile info:", error);
+        return { name: "No name found", photoUrl: "defaultProfilePhoto.jpg" }; // Default values
+    });
+}
+
+function getLatestName(namesRef, email) {
+    return namesRef.where("email", "==", email).get().then((snapshot) => {
+        let latestName = "No name found";
+        let lastTimestamp = 0;
+
+        snapshot.forEach((doc) => {
+            const timestamp = doc.get("timestamp") || 0;
+            const name = doc.get("name");
+
+            if (timestamp > lastTimestamp && name) {
+                lastTimestamp = timestamp;
+                latestName = name;
+            }
+        });
+        return latestName;
+    });
+}
+
+function getLatestProfilePhoto(profilesPhotoRef, email) {
+    return profilesPhotoRef.where("uploaderEmail", "==", email).get().then((querySnapshot) => {
+        let latestPhotoUrl = "defaultProfilePhoto.jpg"; // Fallback photo
+        let latestTimestamp = 0;
+
+        querySnapshot.forEach((doc) => {
+            const timestamp = doc.data().timestamp || 0;
+            const photoUrl = doc.data().downloadUrl;
+
+            if (timestamp > latestTimestamp) {
+                latestTimestamp = timestamp;
+                latestPhotoUrl = photoUrl;
+            }
+        });
+        return latestPhotoUrl;
+    });
+}
+function isMemberInGroup(groupId, receiverEmail) {
+    const db = firebase.firestore();
+    return db.collection("grouping")
+        .doc(groupId)
+        .collection("members")
+        .where("email", "==", receiverEmail)
+        .get()
+        .then(snapshot => !snapshot.empty);
+}
+
+// Helper function to check if a text is a video URL
+function isGroupVideoUrl(text) {
+    return text.startsWith("https://firebasestorage.googleapis.com") &&
+           text.includes("/groupsentvideos%2F");
+}
+function loadGroupChat(userEmail) {
+    const chatContainer = document.getElementById("chatItemsContainer");
+    if (!chatContainer) {
+        console.error("Chat container not found.");
+        return;
+    }
+    chatContainer.innerHTML = ""; // Clear the container
+
+    const db = firebase.firestore();
+    const groupingRef = db.collection("grouping");
+
+    // Fetch groups where the user is a member
+    groupingRef.get().then((groupDocuments) => {
+        if (groupDocuments.empty) {
+            console.log("No groups found.");
+            return;
+        }
+
+        groupDocuments.forEach((groupDoc) => {
+            const groupId = groupDoc.id;
+            const groupName = groupDoc.get("groupname") || "Unknown Group";
+
+            // Check if the user is a member of the group
+            groupingRef
+                .doc(groupId)
+                .collection("members")
+                .where("email", "==", userEmail)
+                .get()
+                .then((memberDocuments) => {
+                    if (!memberDocuments.empty) {
+                        loadGroupMessages(groupId, groupName);
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error checking group members:", error.message);
+                });
+        });
+    }).catch((error) => {
+        console.error("Error fetching groups:", error.message);
+    });
+}
+function loadGroupMessages(groupId, groupName) {
+    const db = firebase.firestore();
+    const groupMessagesRef = db.collection("groupchat").doc(groupId).collection("groupmessages");
+
+    groupMessagesRef.get().then((querySnapshot) => {
+        const messages = querySnapshot.docs
+            .map((doc) => {
+                const messageText = doc.get("text") || "";
+                const sentTime = doc.get("sentTime") || 0;
+
+                // Ensure sentTime is a valid timestamp and convert to a JavaScript Date if needed
+                const messageSentTime = sentTime instanceof firebase.firestore.Timestamp
+                    ? sentTime.toDate()
+                    : new Date(sentTime);
+
+                return {
+                    messageText,
+                    sentTime: messageSentTime,
+                };
+            })
+            .sort((a, b) => b.sentTime - a.sentTime); // Sort by sentTime in descending order
+
+        const latestMessage = messages.length > 0 ? messages[0].messageText : "Group created";
+        const latestSentTime = messages.length > 0 ? messages[0].sentTime : 0;
+
+        loadGroupProfilePhoto(groupId, (profilePhotoUrl) => {
+            displayGroupInfo(groupId, groupName, latestMessage, latestSentTime, profilePhotoUrl);
+        });
+    }).catch((error) => {
+        console.error("Error fetching group messages:", error.message);
+    });
+}
+
+function loadGroupProfilePhoto(groupId, callback) {
+    const db = firebase.firestore();
+    const groupRef = db.collection("grouping").doc(groupId);
+
+    groupRef.get().then((groupDoc) => {
+        const profilePhotoUrl = groupDoc.get("profilePhotoUrl") || "group.jpg";
+        callback(profilePhotoUrl);
+    }).catch((error) => {
+        console.error("Error fetching group profile photo:", error.message);
+        callback("group.jpg"); // Default photo in case of error
+    });
+}
+
+function displayGroupInfo(groupId, groupName, lastMessage, timestamp, profilePhotoUrl) {
+    const chatContainer = document.getElementById("chatItemsContainer");
+    if (!chatContainer) return;
+
+    const groupElement = document.createElement("div");
+    groupElement.classList.add("group-chat");
+
+    // Profile image
+    const profileImageElement = document.createElement("img");
+    profileImageElement.src = profilePhotoUrl || "group.jpg";
+    profileImageElement.classList.add("profile-image");
+
+    // Group info container
+    const groupInfoContainer = document.createElement("div");
+    groupInfoContainer.classList.add("group-info");
+
+    // Group name
+    const groupNameElement = document.createElement("h3");
+    groupNameElement.textContent = groupName;
+
+    // Last message
+    const lastMessageElement = document.createElement("p");
+    if (isGroupVideoUrl(lastMessage)) {
+        lastMessageElement.textContent = "Video Message";
+        lastMessageElement.style.color = "blue";
+    } else if (isGroupImageUrl(lastMessage)) {
+        lastMessageElement.textContent = "Image Message";
+        lastMessageElement.style.color = "blue";
+    } else {
+        lastMessageElement.textContent = lastMessage;
+    }
+
+    // Timestamp
+    const timestampElement = document.createElement("span");
+    timestampElement.textContent = new Date(timestamp).toLocaleString();
+
+    // Append elements
+    groupInfoContainer.append(groupNameElement, lastMessageElement, timestampElement);
+    groupElement.append(profileImageElement, groupInfoContainer);
+
+    // Left-click event
+    groupElement.addEventListener("click", (event) => {
+        if (event.button === 0) {
+            window.location.href = `group_chat_layout.html?groupId=${groupId}&groupName=${encodeURIComponent(groupName)}`;
+        }
+    });
+
+    // Right-click event
+    groupElement.addEventListener("contextmenu", (event) => {
+        event.preventDefault();
+        showAddMembersDialog(groupId, groupName);
+    });
+
+    chatContainer.appendChild(groupElement);
+}
+
+
+// Helper function to check if a text is an image URL
+function isGroupImageUrl(text) {
+    return text.startsWith("https://firebasestorage.googleapis.com") &&
+           (text.includes("/groupsentphotos%2F") || text.includes("/groupsentvideos%2F"));
+}
+
+        document.getElementById("logoutButton").addEventListener("click", () => {
+    firebase.auth().signOut()
+        .then(() => {
+            window.location.href = "index.html";
+        })
+        .catch((error) => {
+            console.error("Error logging out:", error.message);
+        });
+});
+
+function loadUserProfile(userEmail) {
+   
+   
+    fetchAndDisplayName(userEmail);
+    fetchAndDisplayAge(userEmail);
+    fetchAndDisplayRegion(userEmail);
+    fetchAndDisplayUsername(userEmail);
+    fetchAndDisplayGender(userEmail);
+}
+
+    // Fetch and display the latest name based on the timestamp
+    function fetchAndDisplayName(email) {
+        const namesRef = firestore.collection("names");
+        namesRef.where("email", "==", email).get().then((snapshot) => {
+            let lastTimestamp = 0;
+            let latestName = null;
+
+            snapshot.forEach((doc) => {
+                const timestamp = doc.get("timestamp") || 0;
+                const name = doc.get("name");
+
+                if (timestamp > lastTimestamp && name) {
+                    lastTimestamp = timestamp;
+                    latestName = name;
+                }
+            });
+
+            document.getElementById("userName").innerText = latestName || "No name found";
+        }).catch((error) => {
+            console.error("Error fetching name:", error);
+        });
+    }
+
+    function fetchAndDisplayAge(email) {
+    const agesRef = firestore.collection("ages");  // Reference to the 'ages' collection
+    agesRef.where("email", "==", email).get().then((snapshot) => {
+        let lastTimestamp = 0;
+        let latestAge = "Unknown";
+
+        snapshot.forEach((doc) => {
+            const timestamp = doc.get("timestamp") || 0;
+            const age = doc.get("birthdate");
+
+            if (timestamp > lastTimestamp && age) {
+                lastTimestamp = timestamp;
+                latestAge = age;
+            }
+        });
+
+        document.getElementById("userAge").innerText = latestAge || "Unknown";
+    }).catch((error) => {
+        console.error("Error fetching age:", error);
+    });
+}
+
+
+    // Fetch and display the region
+    function fetchAndDisplayRegion(email) {
+        const locationRef = firestore.collection("locations");
+        locationRef.where("email", "==", email).get().then((snapshot) => {
+            let region = "Region not found";
+
+            snapshot.forEach((doc) => {
+                const continent = doc.get("continent");
+                const country = doc.get("country");
+                region = continent && country ? `${continent}/${country}` : "Region not found";
+            });
+
+            document.getElementById("userRegion").innerText = region;
+        }).catch((error) => {
+            console.error("Error fetching region:", error);
+        });
+    }
+
+    // Fetch and display the latest username based on timestamp
+    function fetchAndDisplayUsername(email) {
+        const usernameRef = firestore.collection("usernameSet");
+        usernameRef.where("email", "==", email).get().then((snapshot) => {
+            let latestUsername = null;
+            let lastTimestamp = 0;
+
+            snapshot.forEach((doc) => {
+                const timestamp = doc.get("timestamp") || 0;
+                const username = doc.get("username");
+
+                if (timestamp > lastTimestamp && username) {
+                    lastTimestamp = timestamp;
+                    latestUsername = username;
+                }
+            });
+
+            const usernameTextView = document.getElementById("userUsername");
+            if (latestUsername) {
+                usernameTextView.innerText = latestUsername;
+
+                // Click listener to go to SetNewUsernameActivity
+                usernameTextView.onclick = () => {
+                    window.location.href = "SetNewUsernameActivity.html";
+                };
+
+                // Long click listener to copy username to clipboard
+                usernameTextView.oncontextmenu = (e) => {
+                    e.preventDefault();
+                    navigator.clipboard.writeText(latestUsername).then(() => {
+                        alert("Username copied to clipboard");
+                    });
+                };
+            } else {
+                usernameTextView.innerText = "No username found";
+            }
+        }).catch((error) => {
+            console.error("Error fetching username:", error);
+        });
+    }
+
+    // Fetch and display the gender
+    function fetchAndDisplayGender(email) {
+        const genderRef = firestore.collection("genders");
+        genderRef.where("email", "==", email).get().then((snapshot) => {
+            let gender = "Unknown";
+
+            snapshot.forEach((doc) => {
+                gender = doc.get("gender") || "Unknown";
+            });
+
+            document.getElementById("userGender").innerText = gender;
+        }).catch((error) => {
+            console.error("Error fetching gender:", error);
+        });
+    }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById("sidebar");
+            sidebar.classList.toggle("open");
+        }
+
+        document.getElementById("profilePhoto").addEventListener("click", toggleSidebar);
+    </script>
+</body>
+</html>

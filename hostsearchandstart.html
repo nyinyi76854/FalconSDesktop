@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Host Search</title>
+    <link rel="icon" type="image/x-icon" href="FalconS.ico">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBcTEVvxXmv5N8dJav4xNDRy5hXZRjVeM4",
+            authDomain: "chatflow-59776.firebaseapp.com",
+            databaseURL: "https://chatflow-59776-default-rtdb.firebaseio.com",
+            projectId: "chatflow-59776",
+            storageBucket: "chatflow-59776.appspot.com",
+            messagingSenderId: "549003131640",
+            appId: "1:549003131640:web:3f4a7b8cef4c0d8a2b990d",
+            measurementId: "G-V2180PR5CR"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+    </script>
+    <style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #181818; /* Dark background */
+        color: #e0e0e0; /* Light text color */
+        text-align: center;
+        padding: 15px; /* Reduced padding for compactness */
+    }
+    
+    #searchInput {
+        width: 80%;
+        padding: 10px;
+        font-size: 14px; /* Reduced font size */
+        border-radius: 20px;
+        border: 2px solid transparent;
+        background: linear-gradient(white, white) padding-box,
+                    linear-gradient(45deg, #ff6b6b, #6b6bff) border-box;
+        outline: none;
+        transition: 0.3s ease-in-out;
+        color: #333; /* Dark text inside input */
+    }
+    
+    #searchInput:focus {
+        box-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+    }
+
+    #results {
+        margin-top: 15px;
+        width: 80%;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+        background: #2c2c2c; /* Dark background for results */
+        border-radius: 8px; /* Reduced border radius for compactness */
+        box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.3);
+        padding: 8px; /* Reduced padding */
+    }
+
+    .host-item {
+        display: flex;
+        align-items: center;
+        padding: 8px; /* Reduced padding */
+        border-bottom: 1px solid #444; /* Darker border */
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+
+    .host-item:hover {
+        background-color: #333; /* Slightly lighter background on hover */
+    }
+
+    .profile-img {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        margin-right: 12px;
+        border: 2px solid #6b6bff;
+    }
+
+    .host-info {
+        display: flex;
+        flex-direction: column;
+        text-align: left;
+    }
+
+    .host-info strong {
+        font-size: 16px; /* Reduced font size */
+        font-weight: bold;
+        color: #ff6b6b;
+        font-family: 'Arial Black', sans-serif;
+    }
+
+    .host-info span {
+        font-size: 12px; /* Smaller font size */
+        color: #6b6bff;
+        font-family: 'Courier New', monospace;
+    }
+
+    .back-btn {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: #e0e0e0;
+        cursor: pointer;
+    }
+
+    .dialog-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7); /* Darker overlay */
+        display: none;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .dialog-box {
+        background: #333; /* Dark background for dialog box */
+        padding: 15px; /* Reduced padding */
+        border-radius: 10px;
+        text-align: center;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        width: 250px; /* Compact width */
+    }
+
+    .dialog-box button {
+        margin: 8px;
+        padding: 8px 12px; /* Smaller button padding */
+        border: none;
+        cursor: pointer;
+        font-size: 14px; /* Smaller button text */
+    }
+
+    #confirmJoinBtn {
+        background-color: #28a745;
+        color: white;
+    }
+
+    #cancelJoinBtn {
+        background-color: #dc3545;
+        color: white;
+    }
+</style>
+
+</head>
+<body>
+    <input type="text" id="searchInput" placeholder="Search hosts...">
+    <div id="results"></div>
+<button id="backButton" class="back-btn">
+    <i class="fas fa-arrow-left"></i>
+</button>
+<div id="joinDialog" class="dialog-overlay">
+    <div class="dialog-box">
+        <p id="dialogMessage"></p>
+        <button id="confirmJoinBtn">Join</button>
+        <button id="cancelJoinBtn">Cancel</button>
+    </div>
+</div>
+
+    <script>
+        document.getElementById("backButton").addEventListener("click", function() {
+    window.location.href = "host.html";
+});
+
+        document.getElementById("searchInput").addEventListener("input", function () {
+            const query = this.value.trim();
+            const resultsDiv = document.getElementById("results");
+            resultsDiv.innerHTML = "";
+
+            if (query === "") return;
+
+            db.collection("usernameForHost").where("username", "==", query).get()
+                .then(snapshot => {
+                    snapshot.forEach(doc => {
+                        const hostId = doc.data().hostId;
+                        const username = doc.data().username;
+                        db.collection("host").doc(hostId).get()
+                            .then(hostDoc => {
+                                if (hostDoc.exists) {
+                                    const hostname = hostDoc.data().hostname;
+                                    db.collection("host").doc(hostId).collection("hostprofile").get()
+                                        .then(profileSnapshot => {
+                                            const profileUrl = profileSnapshot.docs.length > 0 ? profileSnapshot.docs[0].data().profileUrl : "user_1077114.png";
+                                            
+                                            const hostItem = document.createElement("div");
+                                            hostItem.className = "host-item";
+                                            hostItem.innerHTML = `
+                                                <img src="${profileUrl}" class="profile-img">
+                                                <div class="host-info">
+                                                    <strong>${hostname}</strong>
+                                                    <span>${username}</span>
+                                                </div>
+                                            `;
+                                            hostItem.addEventListener("click", () => checkSubscriberAndNavigate(hostId, hostname));
+                                            resultsDiv.appendChild(hostItem);
+                                        });
+                                }
+                            });
+                    });
+                });
+        });
+
+        function checkSubscriberAndNavigate(hostId, hostname) {
+            const user = firebase.auth().currentUser;
+            if (!user) {
+                alert("You need to log in to join this host.");
+                return;
+            }
+
+            const userEmail = user.email;
+            db.collection("host").doc(hostId).collection("subscribers").where("email", "==", userEmail).get()
+                .then(snapshot => {
+                    if (!snapshot.empty) {
+                        window.location.href = `hostchat.html?hostId=${encodeURIComponent(hostId)}&hostname=${encodeURIComponent(hostname)}`;
+                    } else {
+                        showJoinDialog(hostId, hostname, userEmail);
+                    }
+                });
+        }
+
+        function showJoinDialog(hostId, hostname, userEmail) {
+    const dialog = document.getElementById("joinDialog");
+    const dialogMessage = document.getElementById("dialogMessage");
+    const confirmBtn = document.getElementById("confirmJoinBtn");
+    const cancelBtn = document.getElementById("cancelJoinBtn");
+
+    dialogMessage.innerText = "You have not joined this host. Do you wish to participate in this host?";
+    dialog.style.display = "flex";
+
+    confirmBtn.onclick = function () {
+        db.collection("host").doc(hostId).collection("subscribers").add({
+            email: userEmail,
+            timestamp: Date.now()
+        }).then(() => {
+            window.location.href = `hostchat.html?hostId=${encodeURIComponent(hostId)}&hostname=${encodeURIComponent(hostname)}`;
+        }).catch(() => {
+            alert("Failed to join host. Please try again.");
+        });
+        dialog.style.display = "none";
+    };
+
+    cancelBtn.onclick = function () {
+        dialog.style.display = "none";
+    };
+}
+
+    </script>
+</body>
+</html>

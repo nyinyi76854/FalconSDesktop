@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Members</title>
+    <link rel="icon" type="image/x-icon" href="FalconS.ico">
+
+    <!-- Add Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: flex-start;
+        }
+        .header img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+        .header i {
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .member {
+            display: flex;
+            align-items: center; /* Align items horizontally */
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .owner-text {
+    color: blue;
+    font-size: 10px;
+    margin-left: 5px;
+}
+
+        .member img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        .member-info {
+            display: flex;
+            flex-direction: column; /* Stack name and timestamp vertically */
+            justify-content: flex-start;
+            gap: 5px; /* Space between name and timestamp */
+        }
+
+        .member-info .name-container {
+            display: flex;
+            align-items: center; /* Align items horizontally */
+            gap: 10px; /* Space between the name and verification items */
+            justify-content: flex-start; /* Ensure the name is at the left */
+        }
+
+        .member-info .name-container .name {
+            font-weight: bold; /* Make the name bold */
+        }
+
+        .member-info .name-container .echo-text {
+            font-size: 12px;
+            color: blue;
+        }
+
+        .member-info .name-container .verification-image {
+            width: 16px; /* Adjust size of verification icon */
+            height: 16px;
+        }
+
+        .member-info .timestamp {
+            font-size: 12px;
+            color: grey;
+            margin-top: 5px; /* Adds space between name and timestamp */
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <i class="fas fa-arrow-left" id="backButton"></i>
+        <img id="groupProfilePhoto" src="group.jpg" alt="Group Profile">
+        <h2 id="groupName"></h2>
+    </div>
+
+    <h3>Members:</h3>
+    <ul id="membersList"></ul>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script>
+    // Firebase initialization
+    const firebaseConfig = {
+        apiKey: "AIzaSyBcTEVvxXmv5N8dJav4xNDRy5hXZRjVeM4",
+        authDomain: "chatflow-59776.firebaseapp.com",
+        databaseURL: "https://chatflow-59776-default-rtdb.firebaseio.com",
+        projectId: "chatflow-59776",
+        storageBucket: "chatflow-59776.appspot.com",
+        messagingSenderId: "549003131640",
+        appId: "1:549003131640:web:3f4a7b8cef4c0d8a2b990d",
+        measurementId: "G-V2180PR5CR"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const firestore = firebase.firestore();
+    const auth = firebase.auth();
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const groupId = urlParams.get('groupId');
+    const groupName = urlParams.get('groupName');
+const backButton = document.getElementById('backButton');
+
+// Add a click event listener
+backButton.addEventListener('click', () => {
+    // Redirect to group_chat_layout.html with groupId and groupName as query parameters
+    window.location.href = `group_chat_layout.html?groupId=${encodeURIComponent(groupId)}&groupName=${encodeURIComponent(groupName)}`;
+});
+    // Listen for auth state changes
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            console.log('User is logged in:', user.email);
+            // Set the group name
+            document.getElementById('groupName').textContent = groupName;
+
+            loadGroupProfilePhoto(groupId, (photoUrl) => {
+                document.getElementById("groupProfilePhoto").src = photoUrl;
+            });
+
+            // Load members from Firestore
+            loadMembers(groupId);
+        } else {
+            // Redirect to login page if no user is logged in
+            window.location.href = 'signin.html';
+        }
+    });
+
+    // Load group profile photo
+    function loadGroupProfilePhoto(groupId, callback) {
+        const db = firebase.firestore();
+        const profileRef = db.collection("groupprofile");
+
+        profileRef.where("groupId", "==", groupId)
+            .get()
+            .then(querySnapshot => {
+                let latestPhotoUrl = "group.jpg"; // Default photo URL
+                let latestTimestamp = 0;
+
+                querySnapshot.forEach(document => {
+                    const timestamp = document.get("timestamp");
+                    const photoUrl = document.get("photoUrl");
+
+                    if (timestamp && timestamp > latestTimestamp) {
+                        latestTimestamp = timestamp;
+                        latestPhotoUrl = photoUrl;
+                    }
+                });
+
+                callback(latestPhotoUrl);
+            })
+            .catch(e => {
+                console.error("Error fetching group profile photo: ", e.message);
+                callback("group.jpg"); // Return default photo in case of error
+            });
+    }
+
+function loadMembers(groupId) {
+    const groupingRef = firestore.collection("grouping").doc(groupId);
+    
+    groupingRef.get().then(groupDoc => {
+        if (!groupDoc.exists) {
+            console.error("Group not found");
+            return;
+        }
+
+        const groupOwnerEmail = groupDoc.data().owner; // Fetch the group owner email
+
+        const membersRef = groupingRef.collection("members");
+        membersRef.get().then(async (querySnapshot) => {
+            const membersList = document.getElementById("membersList");
+            membersList.innerHTML = ""; // Clear previous members to avoid duplication
+
+            let membersArray = [];
+
+            // Fetch all member details concurrently
+            const memberPromises = querySnapshot.docs.map(async (doc) => {
+                const memberData = doc.data();
+                const memberEmail = memberData.email;
+                const memberTimestamp = memberData.timestamp;
+
+                let memberName = memberEmail; // Default to email if name isn't found
+                let isVerified = false;
+                let latestPhotoUrl = "user_1077114.png"; // Default profile picture
+                let latestPhotoTimestamp = 0;
+
+                // Fetch the latest name based on timestamp
+                await firestore.collection("names").where("email", "==", memberEmail).get().then((nameSnapshot) => {
+                    let lastTimestamp = 0;
+                    nameSnapshot.forEach((doc) => {
+                        const timestamp = doc.get("timestamp") || 0;
+                        const name = doc.get("name");
+
+                        if (timestamp > lastTimestamp && name) {
+                            lastTimestamp = timestamp;
+                            memberName = name;
+                        }
+                    });
+
+                    // Log the names and timestamps for debugging
+                    console.log(`Fetched names for ${memberEmail}:`);
+                    nameSnapshot.forEach((doc) => {
+                        const name = doc.get("name");
+                        const timestamp = doc.get("timestamp");
+                        console.log(`Name: ${name}, Timestamp: ${timestamp}`);
+                    });
+
+                });
+
+                // Check verification
+                const verificationSnapshot = await firestore.collection("verificationbridge").where("email", "==", memberEmail).get();
+                isVerified = !verificationSnapshot.empty;
+
+                // Fetch profile photo
+                const photoSnapshot = await firestore.collection("profilesphoto").where("uploaderEmail", "==", memberEmail).get();
+                photoSnapshot.forEach(photoDoc => {
+                    const timestamp = photoDoc.data().timestamp || 0;
+                    const photoUrl = photoDoc.data().downloadUrl;
+
+                    if (timestamp > latestPhotoTimestamp) {
+                        latestPhotoTimestamp = timestamp;
+                        latestPhotoUrl = photoUrl;
+                    }
+                });
+
+                // Store member data in an array for sorting
+                membersArray.push({
+                    email: memberEmail,
+                    name: memberName,
+                    timestamp: memberTimestamp,
+                    photoUrl: latestPhotoUrl,
+                    isVerified: isVerified,
+                    isOwner: groupOwnerEmail === memberEmail,
+                    docId: doc.id // Needed for deletion
+                });
+            });
+
+            await Promise.all(memberPromises); // Wait for all data fetching to complete
+
+            // Sort members by timestamp (latest first)
+            membersArray.sort((a, b) => b.timestamp - a.timestamp);
+
+            // Display sorted members
+            membersArray.forEach(member => {
+                const listItem = document.createElement("li");
+                listItem.classList.add("member");
+
+                // Profile photo
+                const memberImage = document.createElement("img");
+                memberImage.src = member.photoUrl;
+                listItem.appendChild(memberImage);
+
+                // Name and timestamp container
+                const memberInfo = document.createElement("div");
+                memberInfo.classList.add("member-info");
+
+                // Name
+                const nameContainer = document.createElement("div");
+                nameContainer.classList.add("name-container");
+
+                const memberNameElement = document.createElement("span");
+                memberNameElement.classList.add("name");
+                memberNameElement.textContent = member.name;
+                nameContainer.appendChild(memberNameElement);
+
+                if (member.isVerified) {
+                    const echoText = document.createElement("span");
+                    echoText.textContent = "Falcon S";
+                    echoText.classList.add("echo-text");
+                    nameContainer.appendChild(echoText);
+
+                    const verificationImage = document.createElement("img");
+                    verificationImage.src = "verification.png";
+                    verificationImage.alt = "Verification";
+                    verificationImage.classList.add("verification-image");
+                    nameContainer.appendChild(verificationImage);
+                }
+
+                // Add "Owner" text if the member is the group owner
+                if (member.isOwner) {
+                    const ownerText = document.createElement("span");
+                    ownerText.textContent = "Owner";
+                    ownerText.style.color = "blue";
+                    ownerText.style.fontSize = "10px"; // Adjust font size
+                    ownerText.style.marginLeft = "5px"; // Add spacing
+                    nameContainer.appendChild(ownerText);
+                }
+
+                memberInfo.appendChild(nameContainer);
+
+                // Timestamp
+                const memberTimestampElement = document.createElement("div");
+                memberTimestampElement.classList.add("timestamp");
+                memberTimestampElement.textContent = getRelativeTime(member.timestamp);
+                memberInfo.appendChild(memberTimestampElement);
+
+                listItem.appendChild(memberInfo);
+                membersList.appendChild(listItem);
+
+                // Right-click event to remove member (Only owner can remove members)
+                listItem.addEventListener('contextmenu', (event) => {
+                    event.preventDefault();
+                    const currentUserEmail = auth.currentUser?.email;
+
+                    if (currentUserEmail === groupOwnerEmail) {
+                        const confirmation = confirm(`Are you sure you want to remove ${member.name} from this group?`);
+                        if (confirmation) {
+                            membersRef.doc(member.docId).delete()
+                                .then(() => {
+                                    alert(`${member.name} has been removed.`);
+                                    listItem.remove(); // Remove from UI
+                                })
+                                .catch(error => {
+                                    console.error("Error removing member:", error);
+                                    alert("An error occurred while removing the member.");
+                                });
+                        }
+                    } else {
+                        alert("Only the group owner can remove members.");
+                    }
+                });
+
+                // Click event for navigation (Prevent self-chat)
+                listItem.addEventListener('click', () => {
+                    const currentUserEmail = auth.currentUser?.email;
+                    if (member.email !== currentUserEmail) {
+                        window.location.href = `chat_layout.html?email=${encodeURIComponent(member.email)}&name=${encodeURIComponent(member.name)}`;
+                    } else {
+                        console.log("Cannot open chat with yourself.");
+                    }
+                });
+            });
+        }).catch(error => {
+            console.error("Error fetching members:", error);
+        });
+    }).catch(error => {
+        console.error("Error fetching group:", error);
+    });
+}
+
+
+// Function to format timestamps
+function getRelativeTime(timestamp) {
+    const timestampInSeconds = typeof timestamp === "object" && timestamp.seconds
+        ? timestamp.seconds // Firestore Timestamp object
+        : Math.floor(timestamp / 1000); // Convert milliseconds to seconds
+
+    const now = Math.floor(Date.now() / 1000);
+    const diff = now - timestampInSeconds;
+
+    if (diff < 60) return "Just now";
+    if (diff < 3600) return `${Math.floor(diff / 60)} minutes ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
+    if (diff < 172800) return "Yesterday";
+    return new Date(timestampInSeconds * 1000).toLocaleString();
+}
+
+
+    </script>
+</body>
+</html>

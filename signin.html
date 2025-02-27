@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In To Falcon S</title>
+    <link rel="icon" type="image/x-icon" href="FalconS.ico">
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Poppins', Arial, sans-serif;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff; /* White Background */
+            overflow: hidden;
+            color: #333;
+        }
+        
+        .container {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 400px;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            animation: fadeIn 1s ease;
+        }
+
+        .logo {
+            width: 120px;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            color: #4facfe;
+            margin-bottom: 20px;
+        }
+
+        .google-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 12px;
+            background: #4facfe;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .google-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .error {
+            color: #e74c3c;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .android-message {
+            display: none;
+            margin-top: 20px;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .android-logo {
+            width: 40px;
+            margin-top: 10px;
+        }
+
+        .footer {
+    margin-top: 30px;
+    font-size: 14px;
+    color: #777;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.footer img {
+    width: 80px;
+    margin-left: 8px; /* Space between text and logo */
+}
+
+.animated-text {
+    position: absolute;
+    left: 10%;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 220px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #4facfe; /* Default color */
+    font-family: 'Poppins', sans-serif;
+    text-align: left;
+}
+
+.animated-text p {
+    animation: fadeText 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes fadeText {
+    0% { opacity: 0; transform: translateX(-10px); }
+    50% { opacity: 1; transform: translateX(0); }
+    100% { opacity: 0; transform: translateX(10px); }
+}
+
+
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="convo.png" class="logo" alt="Convo Logo">
+        <h2>Sign In to Falcon S</h2>
+        <button class="google-btn" id="googleSignInBtn">
+            Continue with Google
+        </button>
+        <div class="error" id="error-message"></div>
+        <div class="android-message" id="androidMessage">
+            Go to Android Application first and Sign up with Google.
+            <img src="https://upload.wikimedia.org/wikipedia/commons/d/d7/Android_robot.svg" class="android-logo" alt="Android Logo">
+        </div>
+        <div class="footer">
+            <span>Owned by</span>
+            <img src="genix.png" alt="Genix Logo">
+        </div>
+        <div style="text-align: center; margin-top: 10px;">
+    <a href="about_falcons.html" style="color: #4facfe; font-size: 14px; text-decoration: none; font-weight: bold;">
+        About Falcon S
+    </a>
+</div>
+    </div>
+<div class="animated-text">
+    <p id="changingText">• Falcon S is a powerful messaging app.</p>
+</div>
+
+    <script>
+      // ✅ Firebase Configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyBcTEVvxXmv5N8dJav4xNDRy5hXZRjVeM4",
+    authDomain: "chatflow-59776.firebaseapp.com",
+    projectId: "chatflow-59776",
+    storageBucket: "chatflow-59776.appspot.com",
+    messagingSenderId: "549003131640",
+    appId: "1:549003131640:web:3f4a7b8cef4c0d8a2b990d",
+    measurementId: "G-V2180PR5CR"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// Handle Sign In with Redirect
+document.getElementById("googleSignInBtn").addEventListener("click", function() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithRedirect(provider);
+});
+
+// Check for redirect result
+auth.getRedirectResult().then((result) => {
+    if (result.credential) {
+        const user = result.user;
+        checkUserInDatabase(user.email);
+    }
+}).catch(error => {
+    document.getElementById("error-message").textContent = "Error: " + error.message;
+});
+
+const texts = [
+    "• Falcon S is a powerful messaging app.",
+    "• Stay connected, anytime, anywhere.",
+    "• End-to-end encryption for secure chats.",
+    "• Lightning-fast messaging, no delays.",
+    "• Express yourself with rich media sharing.",
+    "• Simplicity meets advanced technology.",
+    "• Conversations, redefined elegantly.",
+    "• Privacy-first. Security always.",
+];
+
+const textElement = document.getElementById("changingText");
+
+function changeText() {
+    const randomIndex = Math.floor(Math.random() * texts.length);
+    textElement.textContent = texts[randomIndex];
+    textElement.style.color = `hsl(${Math.random() * 360}, 80%, 50%)`; // Random color
+}
+
+// Change text every 5 seconds
+setInterval(changeText, 5000);
+
+function checkUserInDatabase(email) {
+    db.collection("users").where("email", "==", email).get()
+        .then((querySnapshot) => {
+            if (!querySnapshot.empty) {
+                window.location.href = "maininterface.html";
+            } else {
+                document.getElementById("androidMessage").style.display = "block";
+            }
+        })
+        .catch(error => {
+            document.getElementById("error-message").textContent = "Error: " + error.message;
+        });
+}
+
+    </script>
+</body>
+</html>

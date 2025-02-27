@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Interface</title>
+<link rel="icon" type="image/x-icon" href="FalconS.ico">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBcTEVvxXmv5N8dJav4xNDRy5hXZRjVeM4",
+            authDomain: "chatflow-59776.firebaseapp.com",
+            databaseURL: "https://chatflow-59776-default-rtdb.firebaseio.com",
+            projectId: "chatflow-59776",
+            storageBucket: "chatflow-59776.appspot.com",
+            messagingSenderId: "549003131640",
+            appId: "1:549003131640:web:3f4a7b8cef4c0d8a2b990d",
+            measurementId: "G-V2180PR5CR"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+    </script>
+
+    <style>
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #121212; /* Darker background */
+    color: #ffffff; /* Light text */
+}
+
+.chatContainer {
+    display: flex;
+    flex-direction: column;
+     background-color: #1e1e1e; /* Dark gray */
+    border-radius: 10px; /* Softer edges */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* Stronger shadow */
+    width: 90%;
+    max-width: 500px;
+    height: 90vh;
+    overflow: hidden;
+}
+
+#chatHeader {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 2px solid #00acc1; /* Light teal border */
+    background-color: #252525;
+   
+}
+
+#backButton {
+    font-size: 1.2rem;
+    color: #29b6f6; /* Brighter blue */
+    cursor: pointer;
+    margin-right: 15px;
+}
+
+#profilePhoto {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    margin-right: 10px;
+    background-color: #444;
+    object-fit: cover;
+}
+
+#chatHeader h2 {
+    font-size: 1.2rem;
+    color: #ffffff; /* Darker gray */
+    display: inline;
+}
+
+#messagesContainer {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* Slightly increased gap for clarity */
+    background-color: #181818;
+}
+.message {
+    margin: 4px 0; /* Compact spacing between messages */
+    padding: 10px 14px; /* Comfortable padding for readability */
+    border-radius: 20px; /* Rounder bubble shape */
+    max-width: 75%; /* Moderate width */
+    display: inline-block;
+    word-wrap: break-word;
+    font-size: 14px; /* Standard font size for clarity */
+    line-height: 1.5; /* Comfortable line spacing */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15); /* Subtle shadow for depth */
+}
+
+/* Sent message styles */
+.sent {
+    align-self: flex-end;
+    background-color: #0084ff; /* Messenger blue */
+    color: #ffffff; /* White text for contrast */
+    border-bottom-right-radius: 5px; /* Slightly sharper edge for the tail effect */
+    font-family: "Arial", "Helvetica", sans-serif; /* Comprehensive and readable font */
+    font-weight: bold; /* Make text bold */
+    font-size: 1rem; /* Adjust size for readability */
+}
+
+/* Received message styles */
+.received {
+    align-self: flex-start;
+    background-color: #f1f0f0; /* Light gray for received messages */
+    color: #000000; /* Black text for better readability */
+    border-bottom-left-radius: 5px; /* Slightly sharper edge for the tail effect */
+    font-family: "Arial", "Helvetica", sans-serif; /* Comprehensive and readable font */
+    font-weight: bold; /* Make text bold */
+    font-size: 1rem; /* Adjust size for readability */
+}
+
+/* Adjustments for media elements within messages */
+.media {
+    max-width: 100%;
+    max-height: 180px; /* Slightly smaller media height for a clean layout */
+    border-radius: 12px; /* Rounded media edges for consistency with bubbles */
+    margin-top: 5px;
+}
+
+/* Extra style for text messages to ensure alignment */
+.text-message {
+    margin: 0;
+    text-align: left; /* Text aligned to the left for a clean look */
+}
+
+/* Input container styling */
+#inputContainer {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border-top: 2px solid #00acc1; /* Light teal border */
+    background-color: #252525;
+}
+
+#messageInput {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 25px;
+    background-color: #e1f5fe; /* Pale blue */
+    outline: none;
+    font-size: 15px;
+    color: #37474f; /* Darker gray */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#sendButton {
+    padding: 10px;
+    margin-left: 10px;
+    background-color: #29b6f6; /* Bright blue */
+    color: #ffffff;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Button shadow */
+}
+
+#sendButton.visible {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#sendButton i {
+    font-size: 1.2rem;
+}
+
+#folderButton {
+    padding: 10px;
+    margin-left: 10px;
+    background-color: #ffa726; /* Soft orange */
+    color: #ffffff;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Button shadow */
+}
+
+#folderButton i {
+    font-size: 1.5rem;
+}
+
+
+#echoStatus {
+    display: none;
+    font-size: 0.9rem;
+    color: #007bff;
+}
+
+#verificationImage {
+    width: 18px; /* Larger image for verification */
+    height: 18px;
+    margin-left: 5px;
+}
+
+#chatContainer:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2); /* Larger shadow on hover */
+}
+.message.selected {
+    background-color: #d1ecf1; /* Light cyan background for clarity */
+    border: 2px solid #007bff; /* Bold blue border for emphasis */
+    border-radius: 10px; /* Rounded corners for a modern look */
+    padding: 15px; /* Increased padding for spaciousness */
+    margin: 5px 0; /* Extra spacing for visual separation */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    width: 100%; /* Ensure the message spans the full width of the container */
+}
+
+.message.selected .text-message {
+    font-weight: bold; /* Bold text for better visibility */
+    color: #004085; /* Darker text color for contrast */
+}
+.message.selected:hover {
+    background-color: #c8e6e8; /* Slightly darker cyan on hover */
+    border-color: #0056b3; /* Darker border color for hover */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Enhanced shadow on hover */
+    transition: all 0.2s ease; /* Smooth transition for hover effects */
+}
+
+.options-menu {
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    position: absolute;
+    z-index: 10;
+    padding: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-10px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.options-menu.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+ #customMenu {
+            display: none;
+            position: absolute;
+            background: white;
+            border: 1px solid #ccc;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+            padding: 5px;
+            border-radius: 5px;
+        }
+        .menu-item {
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+        .menu-item:hover {
+            background: lightgray;
+        }
+.options-menu button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    color: #495057;
+    text-align: left;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.options-menu button i {
+    font-size: 18px;
+    color: #6c757d;
+    transition: color 0.2s ease;
+}
+
+.options-menu button:hover {
+    background: #007bff;
+    color: #fff;
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+.options-menu button:hover i {
+    color: #fff;
+}
+
+.options-menu button:active {
+    background: #0056b3;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) inset;
+    transform: scale(0.98);
+}
+/* Container to hold buttons horizontally */
+.buttonsContainer {
+    display: flex;
+    justify-content: flex-end; /* Align buttons to the right */
+    gap: 10px; /* Space between buttons */
+    padding: 10px 0; /* Padding for container */
+}
+
+/* Basic styling for the buttons */
+#deleteSelectedButton,
+#copySelectedButton {
+    display: none; /* Initially hidden */
+    padding: 8px 16px;
+    font-size: 14px;
+    border-radius: 8px;
+    background-color: #f0f0f0; /* Light background */
+    color: #333;
+    border: 2px solid #ccc;
+    cursor: pointer;
+    transition: all 0.3s ease; /* Smooth transition for effects */
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Add space between the icon and text */
+}
+
+/* Icon styling */
+#deleteSelectedButton i,
+#copySelectedButton i {
+    font-size: 18px; /* Icon size */
+}
+
+/* Hover effect */
+#deleteSelectedButton:hover,
+#copySelectedButton:hover {
+    background-color: #f8d7da; /* Light red for delete */
+    color: #d9534f; /* Red text for delete */
+    border-color: #d9534f; /* Red border for delete */
+}
+
+#deleteSelectedButton:hover i,
+#copySelectedButton:hover i {
+    color: #d9534f; /* Change icon color to red when hovered */
+}
+
+/* Active button effect */
+#deleteSelectedButton:active,
+#copySelectedButton:active {
+    background-color: #d9534f; /* Darker red for active state */
+    color: white;
+    border-color: #d43f00; /* Darker border when pressed */
+}
+
+/* Positioning buttons */
+#deleteSelectedButton,
+#copySelectedButton {
+    margin: 0; /* Remove individual margin */
+    align-self: center; /* Align buttons to the center vertically */
+}
+
+/* For improved accessibility: Add focus styles */
+#deleteSelectedButton:focus,
+#copySelectedButton:focus {
+    outline: 2px solid #0056b3; /* Blue outline when focused */
+    outline-offset: 2px;
+}
+/* Image modal container */
+.image-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50%;
+    max-width: 800px;
+    height: 70%;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Modal background */
+.modal-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+/* Modal content */
+.modal-content {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+/* Close button */
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: white;
+    cursor: pointer;
+    z-index: 10000;
+}
+
+/* Close button hover effect */
+.close-button:hover {
+    color: red;
+}  
+    </style>
+</head>
+<body>
+    
+
+    <div class="chatContainer">
+        <div id="chatHeader">
+            <i id="backButton" class="fas fa-arrow-left" onclick="goBack()"></i>
+            <img id="profilePhoto" src="user_1077114.png" alt="Profile Photo">
+            <div>
+                <h2 id="partnerName">Partner Name</h2>
+                <span id="echoStatus" style="display: none;">
+                     <img id="verificationImage" src="verification.png" alt="Verified">
+                </span>
+            </div>
+        </div>
+
+        <div id="messagesContainer"></div>
+
+        <div id="inputContainer">
+            <input type="text" id="messageInput" placeholder="Type a message..." oninput="toggleSendButton()">
+            <div id="customMenu">
+        <div id="pasteOption" class="menu-item">Paste</div>
+    </div>
+            <button id="sendButton" onclick="sendMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+            <button id="folderButton" onclick="selectMedia()" style="display: inline-flex;">
+    <i class="fas fa-folder"></i>
+</button>
+
+       </div>
+<div class="buttonsContainer">
+    <button id="deleteSelectedButton" onclick="deleteSelectedMessages()" style="display: none;">
+        <i class="fas fa-trash"></i> Delete
+    </button>
+    <button id="copySelectedButton" onclick="copySelectedMessages()" style="display: none;">
+        <i class="fas fa-copy"></i> Copy
+    </button>
+</div>
+
+
+
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const partnerEmail = urlParams.get('email');
+        const partnerName = urlParams.get('name');
+
+        document.getElementById('partnerName').innerText = partnerName || 'No name found';
+
+        const messagesRef = firebase.firestore().collection("messages");
+
+        function goBack() {
+            window.location.href = "maininterface.html";
+        }
+
+        
+
+        function loadPartnerProfilePhoto() {
+            const profilesPhotoRef = firebase.firestore().collection("profilesphoto");
+
+            profilesPhotoRef.where("uploaderEmail", "==", partnerEmail)
+                .get()
+                .then((querySnapshot) => {
+                    let latestPhotoUrl = "user_1077114.png"; // Default image if no profile photo is found
+                    let latestTimestamp = 0;
+
+                    querySnapshot.forEach((doc) => {
+                        const timestamp = doc.data().timestamp || 0;
+                        const photoUrl = doc.data().downloadUrl;
+
+                        if (timestamp > latestTimestamp) {
+                            latestTimestamp = timestamp;
+                            latestPhotoUrl = photoUrl;
+                        }
+                    });
+
+                    document.getElementById("profilePhoto").src = latestPhotoUrl;
+                })
+                .catch(error => {
+                    console.error("Error loading partner profile photo:", error);
+                });
+        }
+function resetInputFieldState() {
+    const messageInput = document.getElementById("messageInput");
+    messageInput.disabled = false; // Ensure it is not disabled
+    messageInput.placeholder = "Type a message..."; // Ensure placeholder is set
+    messageInput.style.display = "inline-flex"; // Ensure it's visible
+}
+
+        function checkVerificationStatus() {
+            const verificationBridgeRef = firebase.firestore().collection("verificationbridge");
+
+            verificationBridgeRef.where("email", "==", partnerEmail)
+                .get()
+                .then((querySnapshot) => {
+                    if (!querySnapshot.empty) {
+                        document.getElementById("echoStatus").style.display = "inline-flex";
+                    } else {
+                        document.getElementById("echoStatus").style.display = "none";
+                    }
+                })
+                .catch(error => {
+                    console.error("Error checking verification status:", error);
+                });
+        }
+
+     function toggleSendButton() {
+    const input = document.getElementById("messageInput");
+    const sendButton = document.getElementById("sendButton");
+    const folderButton = document.getElementById("folderButton");
+
+    
+
+    if (input.value.trim() !== "") {
+        sendButton.style.display = "inline-flex"; // Show send button
+        folderButton.style.display = "none";     // Hide folder button
+    } else {
+        sendButton.style.display = "none";       // Hide send button
+        folderButton.style.display = "inline-flex"; // Keep folder button visible
+    }
+}
+
+function selectMedia() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*,video/*';
+    input.onchange = handleMediaSelection;
+    input.click();
+
+   
+}
+
+
+        function handleMediaSelection(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const storageRef = firebase.storage().ref();
+            const filePath = file.type.startsWith('video/') ? 'sentvideos/' : 'sentphotos/';
+            const fileRef = storageRef.child(`${filePath}${file.name}`);
+
+            fileRef.put(file).then(() => {
+                fileRef.getDownloadURL().then((url) => {
+                    sendMessage(url);
+                }).catch(error => {
+                    console.error("Error fetching file URL:", error);
+                });
+            }).catch(error => {
+                console.error("Error uploading file:", error);
+            });
+        }
+
+        function sendMessage(fileUrl = null) {
+            const messageInput = document.getElementById("messageInput");
+            const message = messageInput.value.trim();
+            const urlToSend = fileUrl || message; // Use file URL if provided, else use text message.
+
+            if (!urlToSend) return;
+
+            const messageData = {
+                senderEmail: firebase.auth().currentUser.email,
+                receiverEmail: partnerEmail,
+                text: urlToSend,
+                sentTime: new Date().getTime(),
+                isRead: false,
+                participants: [firebase.auth().currentUser.email, partnerEmail]
+            };
+
+            messagesRef.add(messageData).then(() => {
+                messageInput.value = "";
+                toggleSendButton();
+            }).catch(error => {
+                console.error("Error sending message:", error);
+            });
+        }
+
+
+       function isImageUrl(text) {
+    return text.startsWith("https://firebasestorage.googleapis.com") && text.includes("/sentphotos%2F");
+}
+
+
+
+
+
+function deleteSelectedMessages() {
+    // Delete each selected message
+    Promise.all(selectedMessages.map((messageId) => messagesRef.doc(messageId).delete()))
+        .then(() => {
+           
+            selectedMessages = [];
+            isSelectionMode = false;
+            loadMessages(); // Reload messages to reflect changes
+            toggleSelectionMode();
+            resetInputFieldState();
+        })
+        .catch((error) => {
+            console.error("Error deleting messages:", error);
+        });
+}
+function copySelectedMessages() {
+    // Copy text content of selected messages
+    const messagesContainer = document.getElementById("messagesContainer");
+    const selectedTexts = Array.from(messagesContainer.querySelectorAll(".message.selected .text-message"))
+        .map((el) => el.textContent);
+
+    navigator.clipboard.writeText(selectedTexts.join("\n"))
+        .then(() => {
+            
+
+            // Clear selection and reset state
+            selectedMessages = [];
+            isSelectionMode = false;
+
+            // Remove 'selected' class from all messages
+            Array.from(messagesContainer.querySelectorAll(".message.selected"))
+                .forEach((el) => el.classList.remove("selected"));
+
+            // Update UI to reflect unselected state
+            toggleSelectionMode();
+            resetInputFieldState();
+        })
+        .catch((error) => {
+            console.error("Error copying messages:", error);
+        });
+}
+
+let isSelectionMode = false;
+let selectedMessages = [];
+function loadMessages() {
+    const userEmail = firebase.auth().currentUser?.email;
+    if (!userEmail || !partnerEmail) return;
+
+    messagesRef
+        .where("participants", "array-contains", userEmail)
+        .onSnapshot((snapshot) => {
+            const messagesContainer = document.getElementById("messagesContainer");
+            const messages = [];
+
+            snapshot.forEach((doc) => {
+                const messageData = doc.data();
+
+                // Check if the partnerEmail is part of the message participants
+                if (
+                    (messageData.senderEmail === userEmail && messageData.receiverEmail === partnerEmail) ||
+                    (messageData.senderEmail === partnerEmail && messageData.receiverEmail === userEmail)
+                ) {
+                    const message = {
+                        id: doc.id,
+                        ...messageData
+                    };
+                    messages.push(message);
+                }
+            });
+
+            // Sort messages by sentTime (oldest first)
+            messages.sort((a, b) => a.sentTime - b.sentTime);
+
+            // Clear the container and append sorted messages
+            messagesContainer.innerHTML = "";
+            messages.forEach((data) => {
+                const isSent = data.senderEmail === userEmail;
+                const messageDiv = document.createElement("div");
+                messageDiv.classList.add("message", isSent ? "sent" : "received");
+                messageDiv.id = data.id; // Set a unique ID for the message
+
+                // Render based on message type
+                if (isImageUrl(data.text)) {
+                    const img = document.createElement("img");
+                    img.src = data.text;
+                    img.alt = "Sent Image";
+                    img.style.maxWidth = "200px";
+                    img.style.borderRadius = "10px";
+                    img.style.cursor = "pointer"; 
+    img.addEventListener('click', () => openImageModal(img.src));
+                    messageDiv.appendChild(img);
+                } else if (isVideoUrl(data.text)) {
+                    const video = document.createElement("video");
+                    video.src = data.text;
+                    video.controls = true;
+                    video.style.maxWidth = "200px";
+                    video.style.borderRadius = "10px";
+                    messageDiv.appendChild(video);
+                } else if (isLink(data.text)) {
+                    // If message is a link, make it pink and clickable
+                    const linkElement = document.createElement("a");
+                    linkElement.href = data.text.startsWith("http") ? data.text : "https://" + data.text;
+                    linkElement.textContent = data.text;
+                    linkElement.target = "_blank"; // Open in a new tab
+                    linkElement.style.color = "pink";
+                    linkElement.style.textDecoration = "underline";
+                    linkElement.style.cursor = "pointer";
+
+                    linkElement.addEventListener("click", (event) => {
+        event.preventDefault(); // Prevent default behavior
+        window.open(linkElement.href, "_blank"); // Open in the default browser
+    });
+
+                    messageDiv.appendChild(linkElement);
+                } else {
+                    const textElement = document.createElement("p");
+                    textElement.textContent = data.text;
+                    textElement.classList.add("text-message");
+                    messageDiv.appendChild(textElement);
+                }
+
+                // Add event listeners for click and selection
+                messageDiv.addEventListener("click", (event) => {
+                    if (isSent) {
+                        if (isSelectionMode) {
+                            selectMessage(data.id, messageDiv);
+                        } else {
+                            showOptions(data, messageDiv, event);
+                        }
+                    }
+                });
+
+                messagesContainer.appendChild(messageDiv);
+            });
+
+            // Scroll to the bottom after messages load
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        });
+}
+function isLink(text) {
+    return text.startsWith("https://") || text.startsWith("www.");
+}
+
+
+function openImageModal(src) {
+    // Create modal container
+    const modal = document.createElement('div');
+    modal.classList.add('image-modal');
+
+    // Modal background
+    const modalBackground = document.createElement('div');
+    modalBackground.classList.add('modal-background');
+
+    // Create modal content (image)
+    const modalContent = document.createElement('div');
+    modalContent.classList.add('modal-content');
+
+    // Image element
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = "Full Size Image";
+    img.style.width = "100%";
+    img.style.height = "auto";
+    img.style.borderRadius = "10px";
+
+    // Close button
+    const closeButton = document.createElement('button');
+    closeButton.innerHTML = '<i class="fas fa-times"></i>'; // Font Awesome close icon
+    closeButton.classList.add('close-button');
+    closeButton.addEventListener('click', () => closeModal(modal));
+
+    // Append elements
+    modalContent.appendChild(img);
+    modal.appendChild(modalBackground);
+    modal.appendChild(modalContent);
+    modal.appendChild(closeButton); // Append close button
+
+    document.body.appendChild(modal);
+}
+
+// Function to close the modal
+function closeModal(modal) {
+    document.body.removeChild(modal);
+}
+
+
+
+function selectMessage(messageId, messageDiv) {
+    // Toggle the 'selected' class
+    if (messageDiv.classList.contains("selected")) {
+        messageDiv.classList.remove("selected");
+        selectedMessages = selectedMessages.filter((id) => id !== messageId);
+    } else {
+        messageDiv.classList.add("selected");
+        selectedMessages.push(messageId);
+    }
+
+    // Update selection mode based on selected messages
+    isSelectionMode = selectedMessages.length > 0;
+    toggleSelectionMode();
+}
+function toggleSelectionMode() {
+    const inputContainer = document.getElementById("inputContainer");
+    const deleteSelectedButton = document.getElementById("deleteSelectedButton");
+    const copySelectedButton = document.getElementById("copySelectedButton");
+
+    // Check if any selected message contains an image or video
+    const containsMedia = selectedMessages.some((id) => {
+        const message = document.getElementById(id);
+        const textContent = message?.querySelector(".text-message")?.textContent || "";
+
+        // Check if the message is an image or video based on its content
+        return isImageUrl(textContent) || isVideoUrl(textContent);
+    });
+
+    if (isSelectionMode) {
+        inputContainer.style.display = "none"; // Hide input container in selection mode
+        deleteSelectedButton.style.display = "inline-flex"; // Always show delete button
+
+        // If any selected message contains media (image/video), hide copy button
+        if (containsMedia) {
+            copySelectedButton.style.display = "none";
+        } else {
+            copySelectedButton.style.display = "inline-flex"; // Show copy button if no media
+        }
+    } else {
+        inputContainer.style.display = "flex"; // Show input container when not in selection mode
+        deleteSelectedButton.style.display = "none"; // Hide delete button
+        copySelectedButton.style.display = "none"; // Hide copy button
+    }
+}
+
+const messageInput = document.getElementById("messageInput");
+            const customMenu = document.getElementById("customMenu");
+            const pasteOption = document.getElementById("pasteOption");
+
+            messageInput.addEventListener("contextmenu", async (event) => {
+                event.preventDefault(); // Prevent default right-click menu
+                
+                try {
+                    const clipboardText = await navigator.clipboard.readText();
+                    if (clipboardText) {
+                        pasteOption.style.display = "block"; // Show paste option
+                    } else {
+                        pasteOption.style.display = "none"; // Hide if no text
+                    }
+                } catch (error) {
+                    pasteOption.style.display = "none"; // Hide if access is denied
+                }
+
+                customMenu.style.top = `${event.clientY}px`;
+                customMenu.style.left = `${event.clientX}px`;
+                customMenu.style.display = "block";
+            });
+
+            // Hide menu on click anywhere else
+            document.addEventListener("click", () => {
+                customMenu.style.display = "none";
+            });
+
+            // Handle Paste Click
+            pasteOption.addEventListener("click", async () => {
+                try {
+                    const clipboardText = await navigator.clipboard.readText();
+                    if (clipboardText) {
+                        messageInput.value += clipboardText; // Paste text
+                        toggleSendButton();
+                    }
+                } catch (error) {
+                    console.error("Failed to paste:", error);
+                }
+                customMenu.style.display = "none"; // Hide menu after pasting
+            });
+
+function showOptions(message, messageDiv, event) {
+    event.stopPropagation();
+
+    // Remove any existing options menu
+    const existingMenu = document.querySelector(".options-menu");
+    if (existingMenu) {
+        existingMenu.remove();
+    }
+
+    // Create and append the options menu
+    const optionsDiv = document.createElement("div");
+    optionsDiv.classList.add("options-menu");
+
+    // Check if the message is an image or video
+    const isMediaMessage = isImageUrl(message.text) || isVideoUrl(message.text);
+
+    // Dynamically add options based on message type
+    if (isMediaMessage) {
+        optionsDiv.innerHTML = `
+            <button onclick="deleteMessage('${message.id}', this)">
+                <i class="fas fa-trash"></i> Delete
+            </button>
+            <button onclick="selectMessage('${message.id}', document.getElementById('${message.id}'))">
+                <i class="fas fa-check"></i> Select
+            </button>
+        `;
+    } else {
+        optionsDiv.innerHTML = `
+            <button onclick="deleteMessage('${message.id}', this)">
+                <i class="fas fa-trash"></i> Delete
+            </button>
+            <button onclick="copyMessage('${message.text}')">
+                <i class="fas fa-copy"></i> Copy
+            </button>
+            <button onclick="selectMessage('${message.id}', document.getElementById('${message.id}'))">
+                <i class="fas fa-check"></i> Select
+            </button>
+        `;
+    }
+
+    document.body.appendChild(optionsDiv);
+
+    // Position the options menu
+    const rect = messageDiv.getBoundingClientRect();
+    optionsDiv.style.left = `${rect.left + window.scrollX}px`;
+    optionsDiv.style.top = `${rect.top + messageDiv.offsetHeight + window.scrollY}px`;
+
+    optionsDiv.classList.add("visible");
+
+    // Close menu on any external click
+    document.addEventListener(
+        "click",
+        (e) => {
+            if (!optionsDiv.contains(e.target)) {
+                optionsDiv.remove();
+            }
+        },
+        { once: true }
+    );
+
+    // Remove menu after performing an action
+    optionsDiv.addEventListener("click", () => optionsDiv.remove());
+}
+
+
+function deleteMessage(messageId, button) {
+    messagesRef.doc(messageId).delete().then(() => {
+        
+        loadMessages();
+        resetInputFieldState();
+    }).catch((error) => {
+        console.error("Error deleting message:", error);
+    });
+
+    // Remove the options menu
+    button.closest(".options-menu").remove();
+}
+
+function copyMessage(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        
+        resetInputFieldState();
+    }).catch((error) => {
+        console.error("Error copying message:", error);
+    });
+
+    // Remove the options menu
+    const optionsDiv = document.querySelector(".options-menu");
+    if (optionsDiv) optionsDiv.remove();
+}
+function isVideoUrl(text) {
+    return text.startsWith("https://firebasestorage.googleapis.com") && text.includes("/sentvideos%2F");
+}
+
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                loadPartnerProfilePhoto();
+                checkVerificationStatus();
+                loadMessages();
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+    </script>
+</body>
+
+</html>

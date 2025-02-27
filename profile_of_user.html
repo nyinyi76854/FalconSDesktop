@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <link rel="icon" type="image/x-icon" href="FalconS.ico">
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+    body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 0;
+    padding: 20px;
+    background-color: #000; /* Changed to black */
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    height: 100vh;
+}
+
+.container {
+    display: flex;
+    gap: 20px;
+    width: 80%;
+    max-width: 900px;
+    border-bottom: 1px solid white;
+}
+
+.profile-container {
+    background: #000;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    width: 300px;
+}
+
+.profile-photo {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #ddd;
+}
+
+.post-container {
+    flex: 1;
+    background: #000; /* Changed to black */
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid white;
+    border-bottom: 1px solid white;
+}
+
+.back-button {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background-color: white; /* White background */
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 10px; /* Added padding for the circular effect */
+    border-radius: 50%; /* Makes the button circular */
+}
+.post-container h2 {
+    color: white;
+}
+
+.user-info {
+    margin-top: 10px;
+    font-size: 18px;
+    color: white; /* Changed user info text color to white */
+}
+
+/* Style for the reaction button */
+.reaction-btn {
+    display: inline-block;
+    background-color: #f2f2f2;
+    padding: 10px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 20px;
+    border: none;
+}
+
+/* Style for the reaction button icon */
+.reaction-btn i {
+    font-size: 18px;
+    color: #333;
+}
+.post {
+    margin-bottom: 10px; /* Adds space between posts */
+    padding-bottom: 10px; /* Ensures spacing within posts */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2); /* Creates a subtle white line */
+}
+
+/* Hover effect on reaction button */
+.reaction-btn:hover {
+    background-color: #ddd;
+}
+.send-icon {
+    font-size: 24px;
+    color: white;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: color 0.3s ease;
+}
+
+.send-icon:hover {
+    color: #007bff; /* Highlight on hover */
+}
+
+.reactions-options {
+    display: none; /* Ensure it's hidden initially */
+    position: absolute;
+    bottom: 40px;
+    left: 0;
+    background: white;
+    padding: 10px;
+    border-radius: 12px;
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+    z-index: 1000;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+    </style>
+</head>
+<body>
+
+    <!-- Back Button -->
+    <button class="back-button" onclick="goBack()">
+        <i class="fas fa-arrow-left"></i>
+    </button>
+<div class="container">
+    <div class="profile-container">
+        
+        <img id="currentUserProfilePhoto" class="profile-photo" src="user_1077114.png" alt="Profile Photo">
+        
+       
+    
+        <p class="user-info"><strong>Followers:</strong> <span id="followerCount">Loading...</span></p>
+
+        <p class="user-info">
+        <strong>Name:</strong> 
+        <span id="userName">Loading...</span> 
+        <span id="youTag" style="display: none; font-weight: bold;"> (You)</span>
+        <button id="followButton" style="visibility: hidden; padding: 5px 10px; margin-left: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            Follow
+        </button>
+            
+    </p>
+        <p class="user-info"><strong>Username:</strong> <span id="userUsername">Loading...</span></p>
+        <p class="user-info"><strong>Age:</strong> <span id="userAge">Loading...</span></p>
+        <p class="user-info"><strong>Gender:</strong> <span id="userGender">Loading...</span></p>
+        <p class="user-info"><strong>Region:</strong> <span id="userRegion">Loading...</span></p>
+      <p class="user-info">
+    <i id="sendIcon" class="fas fa-paper-plane send-icon"></i>
+</p>
+
+
+    </div>
+<div class="post-container">
+            <h2>User Posts</h2>
+        </div>
+    </div>
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBcTEVvxXmv5N8dJav4xNDRy5hXZRjVeM4",
+            authDomain: "chatflow-59776.firebaseapp.com",
+            databaseURL: "https://chatflow-59776-default-rtdb.firebaseio.com",
+            projectId: "chatflow-59776",
+            storageBucket: "chatflow-59776.appspot.com",
+            messagingSenderId: "549003131640",
+            appId: "1:549003131640:web:3f4a7b8cef4c0d8a2b990d",
+            measurementId: "G-V2180PR5CR"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+    const firestore = firebase.firestore();
+
+    // Get userEmail from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const carrieduserEmail = urlParams.get("userEmail");
+       
+     
+countFollowers(carrieduserEmail);
+    firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+            const currentUserEmail = user.email;
+            const followButton = document.getElementById("followButton");
+            const youTag = document.getElementById("youTag");
+            const chatButton = document.getElementById("sendIcon");
+            if (carrieduserEmail === currentUserEmail) {
+                // Viewing own profile
+                youTag.style.display = "inline";
+                followButton.style.display = "none";
+                chatButton.style.display = "none";
+            } else {
+                // Viewing another user's profile
+                followButton.style.visibility = "visible";
+                chatButton.style.visibility = "visible";
+                checkFollowedOrNot(currentUserEmail, carrieduserEmail, followButton);
+                followButton.addEventListener("click", () => {
+                    followUser(currentUserEmail, carrieduserEmail, followButton);
+                });
+              
+
+            }
+        }
+    });
+document.getElementById("sendIcon").addEventListener("click", function() {
+    const userName = document.getElementById("userName").textContent.trim();
+    // Encode the name and email for URL safety
+    const queryString = `?name=${encodeURIComponent(userName)}&email=${encodeURIComponent(carrieduserEmail)}`;
+    
+    // Redirect to chat_layout.html with userName and carriedUserEmail
+    window.location.href = "chat_layout.html" + queryString;
+});
+
+
+function countFollowers(targetUserEmail) {
+    const agesRef = firestore.collection("ages");
+
+    // Find the document where email == targetUserEmail
+    agesRef.where("email", "==", targetUserEmail).get().then(querySnapshot => {
+        if (querySnapshot.empty) {
+            console.error("User not found in ages collection.");
+            document.getElementById("followerCount").innerText = "0 followers";
+            return;
+        }
+
+        querySnapshot.forEach(doc => {
+            const followersRef = agesRef.doc(doc.id).collection("followers");
+
+            // Get count of followers
+            followersRef.get().then(snapshot => {
+                const count = snapshot.size; // Get the number of documents in the collection
+                document.getElementById("followerCount").innerText = `${count} followers`;
+            }).catch(error => console.error("Error counting followers:", error));
+        });
+    }).catch(error => console.error("Error fetching ages collection:", error));
+}
+
+    function followUser(currentUserEmail, targetUserEmail, followButton) {
+        const agesRef = firestore.collection("ages");
+
+        // Find the document where email == targetUserEmail
+        agesRef.where("email", "==", targetUserEmail).get().then(querySnapshot => {
+            if (querySnapshot.empty) {
+                console.error("User not found in ages collection.");
+                return;
+            }
+
+            querySnapshot.forEach(doc => {
+                const userDocRef = agesRef.doc(doc.id);
+                const followersRef = userDocRef.collection("followers");
+
+                // Check if already followed
+                followersRef.where("follower", "==", currentUserEmail).get().then(snapshot => {
+                    if (!snapshot.empty) {
+                        // Unfollow: Remove the follower document
+                        snapshot.forEach(followerDoc => {
+                            followersRef.doc(followerDoc.id).delete().then(() => {
+                                console.log("Unfollowed successfully");
+                                updateFollowButton(followButton, false);
+                            }).catch(error => console.error("Error unfollowing:", error));
+                        });
+                    } else {
+                        // Follow: Add new follower
+                        followersRef.add({
+                            follower: currentUserEmail,
+                            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                        }).then(() => {
+                            console.log("Followed successfully");
+                            updateFollowButton(followButton, true);
+                        }).catch(error => console.error("Error following:", error));
+                    }
+                });
+            });
+        }).catch(error => console.error("Error fetching ages collection:", error));
+    }
+
+    function checkFollowedOrNot(currentUserEmail, targetUserEmail, followButton) {
+        const agesRef = firestore.collection("ages");
+
+        // Find the document where email == targetUserEmail
+        agesRef.where("email", "==", targetUserEmail).get().then(querySnapshot => {
+            if (querySnapshot.empty) {
+                console.error("User not found in ages collection.");
+                return;
+            }
+
+            querySnapshot.forEach(doc => {
+                const followersRef = agesRef.doc(doc.id).collection("followers");
+
+                // Check if the current user is a follower
+                followersRef.where("follower", "==", currentUserEmail).get().then(snapshot => {
+                    updateFollowButton(followButton, !snapshot.empty);
+                }).catch(error => console.error("Error checking follow status:", error));
+            });
+        }).catch(error => console.error("Error fetching ages collection:", error));
+    }
+
+    function updateFollowButton(followButton, isFollowed) {
+        if (isFollowed) {
+            followButton.innerHTML = `<span class="check-icon">&#10003;</span> Followed`;
+            followButton.style.background = "gray";
+        } else {
+            followButton.innerHTML = `<span class="plus-icon">+</span> Follow`;
+            followButton.style.background = "linear-gradient(45deg, #007bff, #00c6ff)";
+        }
+    }
+
+fetchPosts(carrieduserEmail);
+        if (carrieduserEmail) {
+            fetchAndDisplayName(carrieduserEmail);
+            fetchAndDisplayAge(carrieduserEmail);
+            
+            fetchAndDisplayRegion(carrieduserEmail);
+            fetchAndDisplayUsername(carrieduserEmail);
+            fetchAndDisplayGender(carrieduserEmail);
+            loadUserProfile(carrieduserEmail);
+        } else {
+            console.error("No userEmail provided in URL.");
+        }
+
+        // Function to navigate back to social_post.html
+        function goBack() {
+            window.location.href = "post_social.html";
+        }
+
+        // Fetch and display the latest name
+        function fetchAndDisplayName(email) {
+            const namesRef = firestore.collection("names");
+            namesRef.where("email", "==", email).get().then((snapshot) => {
+                let lastTimestamp = 0;
+                let latestName = "No name found";
+
+                snapshot.forEach((doc) => {
+                    const timestamp = doc.get("timestamp") || 0;
+                    const name = doc.get("name");
+
+                    if (timestamp > lastTimestamp && name) {
+                        lastTimestamp = timestamp;
+                        latestName = name;
+                    }
+                });
+
+                document.getElementById("userName").innerText = latestName;
+            }).catch((error) => {
+                console.error("Error fetching name:", error);
+            });
+        }
+function fetchAndDisplayNameForPost(email, callback) {
+    const namesRef = firestore.collection("names");
+    namesRef.where("email", "==", email).get().then((snapshot) => {
+        let lastTimestamp = 0;
+        let latestName = "Unknown User";
+
+        snapshot.forEach((doc) => {
+            const timestamp = doc.data().timestamp || 0;
+            const name = doc.data().name;
+
+            if (timestamp > lastTimestamp && name) {
+                lastTimestamp = timestamp;
+                latestName = name;
+            }
+        });
+
+        callback(latestName);
+    }).catch(error => {
+        console.error("Error fetching name:", error);
+        callback("Unknown User");
+    });
+}
+        function fetchProfilePhoto(userEmail, callback) {
+        const profilesPhotoRef = firestore.collection("profilesphoto");
+        profilesPhotoRef.where("uploaderEmail", "==", userEmail)
+            .get()
+            .then((querySnapshot) => {
+                let latestPhotoUrl = "profile.png"; // Default profile photo
+                let latestTimestamp = 0;
+
+                querySnapshot.forEach((doc) => {
+                    const timestamp = doc.data().timestamp || 0;
+                    const photoUrl = doc.data().downloadUrl;
+
+                    if (timestamp > latestTimestamp) {
+                        latestTimestamp = timestamp;
+                        latestPhotoUrl = photoUrl;
+                    }
+                });
+
+                callback(latestPhotoUrl);
+            })
+            .catch((error) => {
+                console.error("Error fetching profile photo:", error);
+                callback("user_1077114.png"); // Fallback to default
+            });
+    }
+        // Fetch and display age
+        function fetchAndDisplayAge(email) {
+            const agesRef = firestore.collection("ages");
+            agesRef.where("email", "==", email).get().then((snapshot) => {
+                let lastTimestamp = 0;
+                let latestAge = "Unknown";
+
+                snapshot.forEach((doc) => {
+                    const timestamp = doc.get("timestamp") || 0;
+                    const age = doc.get("birthdate");
+
+                    if (timestamp > lastTimestamp && age) {
+                        lastTimestamp = timestamp;
+                        latestAge = age;
+                    }
+                });
+
+                document.getElementById("userAge").innerText = latestAge;
+            }).catch((error) => {
+                console.error("Error fetching age:", error);
+            });
+        }
+function fetchPosts(userEmail) {
+    firestore.collection("postforall")
+        .where("poster", "==", userEmail) // Filter by userEmail
+        .orderBy("timestamp", "desc")
+        .onSnapshot(snapshot => {
+            const postContainer = document.querySelector(".post-container");
+            postContainer.innerHTML = ""; // Clear previous posts
+
+            if (snapshot.empty) {
+                postContainer.innerHTML = "<p>No posts available.</p>";
+                return;
+            }
+
+            snapshot.forEach(doc => {
+                let post = doc.data();
+                let postId = doc.id;
+
+                let postElement = document.createElement("div");
+                postElement.classList.add("post");
+                postElement.id = "post-" + postId;
+
+                fetchAndDisplayNameForPost(post.poster, (displayName) => {
+                    fetchProfilePhoto(post.poster, (profilePhotoUrl) => {
+                        checkVerifiedOrNot(post.poster, (isVerified) => {
+                            firebase.auth().onAuthStateChanged(user => {
+                                if (!user) return;
+                                const currentUserEmail = user.email;
+
+                                let menuDotHTML = "";
+                                if (currentUserEmail === post.poster) {
+                                    menuDotHTML = `
+                                        <button class="menu-dot" onclick="showPostMenu(event, '${postId}')" 
+                                            style="background: none; border: none; font-size: 20px; cursor: pointer; color: #555; padding: 5px; position: relative; margin-left: 15px; outline: none;">
+                                            &#x22EE;
+                                        </button>`;
+                                }
+
+                                let mediaContent = "";
+                                if (isImageUrl(post.posttext)) {
+                                    mediaContent = `<img src="${post.posttext}" style="max-width: 100%; max-height: 400px; border-radius: 5px; display: block; margin: 0 auto;">`;
+                                } else if (isVideoUrl(post.posttext)) {
+                                    mediaContent = `
+                                        <div class="custom-video-container" style="position: relative; width: 100%; max-height: 400px; border-radius: 5px; overflow: hidden; background-color: black;">
+                                            <video id="video-${postId}" class="custom-video" style="width: 100%; height: auto; display: block;" ontimeupdate="updateVideoTime('${postId}')">
+                                                <source src="${post.posttext}" type="video/mp4">
+                                                Your browser does not support the video tag.
+                                            </video>
+                                            <button class="custom-play-btn" onclick="togglePlay('${postId}')" 
+                                                style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                                                background: rgba(0, 0, 0, 0.6); border: none; color: white; font-size: 24px; 
+                                                cursor: pointer; border-radius: 50%; padding: 10px;">
+                                                <i class="fas fa-play"></i>
+                                            </button>
+                                            <div class="custom-video-controls" style="position: absolute; bottom: 10px; left: 10px; right: 10px; 
+                                                display: flex; justify-content: space-between; align-items: center; color: white; 
+                                                padding: 5px 10px; background: rgba(0, 0, 0, 0.6); border-radius: 10px;">
+                                                <span class="current-time" id="current-time-${postId}" style="font-size: 14px;">0:00</span>
+                                                <input type="range" class="custom-seekbar" id="seekbar-${postId}" value="0" max="100" 
+                                                    onclick="seekVideo('${postId}', this.value)"
+                                                    style="flex-grow: 1; margin: 0 10px; -webkit-appearance: none; background: rgba(255, 255, 255, 0.3);
+                                                    height: 5px; border-radius: 5px; outline: none; cursor: pointer;">
+                                                <span class="duration" id="duration-${postId}" style="font-size: 14px;">0:00</span>
+                                            </div>
+                                        </div>`;
+                                } else {
+                                    mediaContent = `<div class="post-text" style="color: white;">${post.posttext}</div>`;
+                                }
+
+                                let descriptionContent = "";
+                                if (post.description) {
+                                    descriptionContent = `
+                                        <div class="post-description" style="max-height: 3.2em; overflow: hidden; color: white;">
+                                            ${post.description.length > 100 ? post.description.substring(0, 100) + '...' : post.description}
+                                        </div>
+                                        ${post.description.length > 100 ? '<button class="see-more-btn" onclick="toggleDescription(this)" style="color: white;">See more</button>' : ''}`;
+                                }
+
+                                let reactionsContent = `
+                                    <div style="display: flex; align-items: center; position: relative;">
+                                        <button class="reaction-btn">
+                                            <i class="fa fa-heart"></i> 
+                                        </button>
+                                        <span class="reaction-summary" id="reaction-summary-${postId}" style="margin-left: 10px; font-size: 14px;"></span>
+                                        <div class="reactions-options" style="display: none; 
+                                            position: absolute; bottom: 40px; left: 0; background: white; padding: 10px; 
+                                            border-radius: 12px; box-shadow: 0px 4px 10px rgba(0,0,0,0.1); z-index: 1000; display: flex; gap: 8px;">
+                                            <button class="reaction-option" onclick="reactToPost('${postId}', 'love', this)" style="background: #ffccd5; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 18px; cursor: pointer;">❤️</button>
+                                            <button class="reaction-option" onclick="reactToPost('${postId}', 'like', this)" style="background: #cce5ff; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 18px; cursor: pointer;">👍</button>
+                                            <button class="reaction-option" onclick="reactToPost('${postId}', 'haha', this)" style="background: #fff3cd; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 18px; cursor: pointer;">😂</button>
+                                            <button class="reaction-option" onclick="reactToPost('${postId}', 'angry', this)" style="background: #f8d7da; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 18px; cursor: pointer;">😡</button>
+                                        </div>
+                                    </div>`;
+
+                                postElement.innerHTML = `
+                                    <div class="post-header" style="display: flex; align-items: center; color: white;">
+                                        <img src="${profilePhotoUrl}" alt="Profile Photo" style="width: 30px; height: 30px; border-radius: 50%; margin-right: 10px;">
+                                        <span style="color: white;">${displayName}</span>
+                                        <img src="verification.png" alt="Verified" class="verified-icon" style="width: 16px; height: 16px; margin-left: 5px; display: ${isVerified ? 'inline' : 'none'};">
+                                    </div>
+                                    ${mediaContent}
+                                    ${descriptionContent}
+                                    <div class="post-footer" style="color: white;">${new Date(post.timestamp).toLocaleString()}</div>
+                                    ${reactionsContent}`;
+
+                                postContainer.appendChild(postElement);
+                                checkUserReaction(postId);
+                                fetchReactionsCount(postId);
+                                // Add hover effect to show/hide reaction options
+                            let reactionBtn = postElement.querySelector(".reaction-btn");
+                            let reactionOptions = postElement.querySelector(".reactions-options");
+                            reactionOptions.style.display = "none"; 
+                            reactionBtn.addEventListener("mouseenter", () => {
+                                reactionOptions.style.display = "flex"; // Show reactions options on hover
+                            });
+
+                            postElement.addEventListener("mouseleave", () => {
+                                reactionOptions.style.display = "none"; // Hide reactions options when hover ends
+                            });
+                            });
+                        });
+                    });
+                });
+            });
+        });
+}
+
+
+        let videoTimeouts = {}; // Track timeouts for each video
+
+// Function to toggle play/pause
+function togglePlay(postId) {
+    let video = document.getElementById("video-" + postId);
+    let playButton = document.querySelector(`#video-${postId} + .custom-play-btn i`);
+
+    if (video.paused) {
+        video.play();
+        playButton.classList.remove("fa-play");
+        playButton.classList.add("fa-pause");
+        hideControls(postId);
+    } else {
+        video.pause();
+        playButton.classList.remove("fa-pause");
+        playButton.classList.add("fa-play");
+        showControls(postId);
+    }
+}
+
+function hideControls(postId) {
+    videoTimeouts[postId] = setTimeout(() => {
+        let controlsContainer = document.querySelector(`#controls-${postId}`);
+        let playButton = document.querySelector(`#video-${postId} + .custom-play-btn`);
+
+        if (!document.getElementById(`video-${postId}`).paused) {
+            controlsContainer.style.display = "none";
+            playButton.style.display = "none";
+        }
+    }, 3000); // Hide controls after 3 seconds
+}
+
+function showControls(postId) {
+    let controlsContainer = document.querySelector(`#controls-${postId}`);
+    let playButton = document.querySelector(`#video-${postId} + .custom-play-btn`);
+
+    controlsContainer.style.display = "block";
+    playButton.style.display = "block";
+
+    clearTimeout(videoTimeouts[postId]); // Clear any existing timeout
+}
+
+// Function to update play/pause icon and seekbar
+function updateVideoTime(postId) {
+    let video = document.getElementById("video-" + postId);
+    let currentTime = video.currentTime;
+    let duration = video.duration;
+
+    document.getElementById("current-time-" + postId).textContent = formatTime(currentTime);
+    document.getElementById("duration-" + postId).textContent = formatTime(duration);
+
+    let seekbar = document.getElementById("seekbar-" + postId);
+    if (duration > 0) {
+        seekbar.value = (currentTime / duration) * 100;
+    }
+}
+
+// Function to seek video
+function seekVideo(postId, value) {
+    let video = document.getElementById("video-" + postId);
+    let duration = video.duration;
+    video.currentTime = (value / 100) * duration;
+}
+
+// Helper function to format time as mm:ss
+function formatTime(seconds) {
+    let minutes = Math.floor(seconds / 60);
+    let remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+}
+
+// Attach event listeners for video controls
+document.querySelectorAll('.custom-video-container').forEach(container => {
+    let video = container.querySelector('.custom-video');
+    let postId = video.id.split('-')[1];
+
+    // Remove default video controls
+    video.removeAttribute("controls");
+
+    // Disable PiP and Enhance button
+    video.setAttribute("controlsList", "nodownload nofullscreen noremoteplayback");
+
+    // Update time & seekbar when playing
+    video.addEventListener('timeupdate', () => updateVideoTime(postId));
+
+    // Show controls on hover
+    container.addEventListener('mouseenter', () => showControls(postId));
+    container.addEventListener('mouseleave', () => hideControls(postId));
+
+    // Toggle controls when clicking video
+    video.addEventListener('click', () => {
+        let controlsContainer = document.querySelector(`#controls-${postId}`);
+        controlsContainer.style.display = (controlsContainer.style.display === "none") ? "block" : "none";
+    });
+
+    // Play/Pause Button Update
+    video.addEventListener('play', () => {
+        let playButton = document.querySelector(`#video-${postId} + .custom-play-btn i`);
+        playButton.classList.remove("fa-play");
+        playButton.classList.add("fa-pause");
+        hideControls(postId);
+    });
+
+    video.addEventListener('pause', () => {
+        let playButton = document.querySelector(`#video-${postId} + .custom-play-btn i`);
+        playButton.classList.remove("fa-pause");
+        playButton.classList.add("fa-play");
+        showControls(postId);
+    });
+});
+
+function reactToPost(postId, reactionType, btn) {
+    const userEmail = firebase.auth().currentUser.email;
+    const reactionsCollection = firestore.collection("postforall").doc(postId).collection("falconspostreaction");
+
+    reactionsCollection.where("reactor", "==", userEmail).get().then(snapshot => {
+        let hasReacted = false;
+        let oldReactionType = null;
+
+        if (!snapshot.empty) {
+            snapshot.forEach(doc => {
+                hasReacted = true;
+                oldReactionType = doc.data().reactionType;
+                doc.ref.delete(); // Remove old reaction
+            });
+        }
+
+        if (!hasReacted || oldReactionType !== reactionType) {
+            // Add new reaction
+            reactionsCollection.add({
+                reactor: userEmail,
+                reactionType: reactionType,
+                timestamp: Date.now()
+            }).then(() => {
+                updateReactionIcon(postId, reactionType);
+                
+            }).catch(error => console.error("Error saving reaction:", error));
+        } else {
+            // If the same reaction is clicked, remove it
+            updateReactionIcon(postId, "default");
+            
+        }
+    });
+
+}
+
+
+// Function to update reaction icon on reaction button
+function updateReactionIcon(postId, reactionType) {
+    const postElement = document.querySelector(`#post-${postId}`);
+    if (!postElement) return;
+
+    const reactionBtn = postElement.querySelector(".reaction-btn");
+    
+    let emoji = "";
+    switch (reactionType) {
+        case 'love': emoji = '❤️'; break;
+        case 'like': emoji = '👍'; break;
+        case 'haha': emoji = '😂'; break;
+        case 'angry': emoji = '😡'; break;
+        default: emoji = '<i class="fa fa-heart"></i>'; // Default icon
+    }
+    
+    reactionBtn.innerHTML = emoji;
+}
+
+// Function to check user's reaction on a post
+function checkUserReaction(postId) {
+    const userEmail = firebase.auth().currentUser.email;
+    const reactionsCollection = firestore.collection("postforall").doc(postId).collection("falconspostreaction");
+
+    reactionsCollection.where("reactor", "==", userEmail).get().then(snapshot => {
+        if (!snapshot.empty) {
+            snapshot.forEach(doc => {
+                updateReactionIcon(postId, doc.data().reactionType);
+            });
+        }
+    });
+}
+
+
+
+
+
+function isVideoUrl(text) {
+    return text.startsWith("https://firebasestorage.googleapis.com") &&
+           text.includes("/socialpostvideooffalcons%2F");
+}
+
+function isImageUrl(text) {
+    return text.startsWith("https://firebasestorage.googleapis.com") &&
+           text.includes("/socialpostimageoffalcons%2F");
+}
+// Function to fetch real-time reaction count updates
+function fetchReactionsCount(postId) {
+    const reactionsCollection = firestore.collection("postforall").doc(postId).collection("falconspostreaction");
+
+    reactionsCollection.onSnapshot(snapshot => { // Use onSnapshot for real-time updates
+        let reactionCounts = {};
+
+        snapshot.forEach(doc => {
+            let reactionType = doc.data().reactionType;
+            if (!reactionCounts[reactionType]) {
+                reactionCounts[reactionType] = 0;
+            }
+            reactionCounts[reactionType]++;
+        });
+
+        // Sort reactions from highest to lowest count
+        let sortedReactions = Object.entries(reactionCounts)
+            .sort((a, b) => b[1] - a[1]) // Sort by count descending
+            .map(([reaction, count]) => `${count} ${reaction}`); // Format text
+
+        let reactionSummary = sortedReactions.length > 0 ? `There are ${sortedReactions.join(', ')}` : '';
+
+        // Update the UI
+        let reactionSummaryElement = document.getElementById(`reaction-summary-${postId}`);
+        if (reactionSummaryElement) {
+            reactionSummaryElement.innerText = reactionSummary;
+        }
+    });
+}
+
+function toggleDescription(button) {
+    const descriptionDiv = button.previousElementSibling; // Get the description div
+    const isExpanded = descriptionDiv.style.maxHeight === 'none';
+
+    if (isExpanded) {
+        descriptionDiv.style.maxHeight = '3.2em'; // Collapse to 2 lines
+        button.textContent = 'See more';
+    } else {
+        descriptionDiv.style.maxHeight = 'none'; // Expand text
+        button.textContent = 'See less';
+    }
+}
+
+function checkVerifiedOrNot(userEmail, callback) {
+    const verificationRef = firestore.collection("verificationbridge");
+
+    verificationRef.where("email", "==", userEmail)
+        .get()
+        .then((snapshot) => {
+            callback(!snapshot.empty); // Returns true if verified, false otherwise
+        })
+        .catch((error) => {
+            console.error("Error checking verification status:", error);
+            callback(false);
+        });
+}
+
+        // Fetch and display the region
+        function fetchAndDisplayRegion(email) {
+            const locationRef = firestore.collection("locations");
+            locationRef.where("email", "==", email).get().then((snapshot) => {
+                let region = "Region not found";
+
+                snapshot.forEach((doc) => {
+                    const continent = doc.get("continent");
+                    const country = doc.get("country");
+                    region = continent && country ? `${continent}/${country}` : "Region not found";
+                });
+
+                document.getElementById("userRegion").innerText = region;
+            }).catch((error) => {
+                console.error("Error fetching region:", error);
+            });
+        }
+
+        // Fetch and display the username
+        function fetchAndDisplayUsername(email) {
+            const usernameRef = firestore.collection("usernameSet");
+            usernameRef.where("email", "==", email).get().then((snapshot) => {
+                let latestUsername = "No username found";
+                let lastTimestamp = 0;
+
+                snapshot.forEach((doc) => {
+                    const timestamp = doc.get("timestamp") || 0;
+                    const username = doc.get("username");
+
+                    if (timestamp > lastTimestamp && username) {
+                        lastTimestamp = timestamp;
+                        latestUsername = username;
+                    }
+                });
+
+                document.getElementById("userUsername").innerText = latestUsername;
+            }).catch((error) => {
+                console.error("Error fetching username:", error);
+            });
+        }
+
+        // Fetch and display the gender
+        function fetchAndDisplayGender(email) {
+            const genderRef = firestore.collection("genders");
+            genderRef.where("email", "==", email).get().then((snapshot) => {
+                let gender = "Unknown";
+
+                snapshot.forEach((doc) => {
+                    gender = doc.get("gender") || "Unknown";
+                });
+
+                document.getElementById("userGender").innerText = gender;
+            }).catch((error) => {
+                console.error("Error fetching gender:", error);
+            });
+        }
+
+        // Load and display profile photo
+        function loadUserProfile(email) {
+            const profilesPhotoRef = firestore.collection("profilesphoto");
+
+            profilesPhotoRef.where("uploaderEmail", "==", email)
+                .get()
+                .then((querySnapshot) => {
+                    let latestPhotoUrl = "profile.png";
+                    let latestTimestamp = 0;
+
+                    querySnapshot.forEach((doc) => {
+                        const timestamp = doc.data().timestamp || 0;
+                        const photoUrl = doc.data().downloadUrl;
+
+                        if (timestamp > latestTimestamp) {
+                            latestTimestamp = timestamp;
+                            latestPhotoUrl = photoUrl;
+                        }
+                    });
+
+                    document.getElementById("currentUserProfilePhoto").src = latestPhotoUrl;
+                })
+                .catch((error) => {
+                    console.error("Error fetching profile photo:", error);
+                });
+        }
+    </script>
+
+</body>
+</html>

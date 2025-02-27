@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Search Users</title>
+  <link rel="icon" type="image/x-icon" href="FalconS.ico">
+
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+  <style>
+/* Compact Dark Mode Styling */
+body {
+    font-family: 'Inter', sans-serif; /* Sleek modern font */
+    margin: 0;
+    padding: 0;
+    background-color: #111; /* Darker black background */
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Back Button */
+.backButton {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    font-size: 14px;
+    color: white;
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 4px;
+    transition: 0.3s;
+}
+.backButton:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Search Input */
+#searchContainer {
+    margin-top: 35px;
+    width: 90%;
+    max-width: 360px;
+}
+#searchInput {
+    width: 100%;
+    padding: 8px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    background: #222;
+    color: white;
+    outline: none;
+    text-align: center;
+    transition: 0.3s;
+}
+#searchInput:focus {
+    background: #333;
+}
+
+/* Search Results */
+#searchResults {
+    margin-top: 12px;
+    width: 90%;
+    max-width: 360px;
+}
+
+/* User Result Item */
+.resultItem {
+    display: flex;
+    align-items: center;
+    background: #1a1a1a;
+    padding: 8px;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    transition: 0.2s ease;
+    cursor: pointer;
+}
+.resultItem:hover {
+    background: #292929;
+    transform: scale(1.02);
+}
+
+/* Profile Image */
+.profilePhoto {
+    width: 34px; 
+    height: 34px;
+    border-radius: 50%;
+    margin-right: 8px;
+    border: 1px solid #fff;
+}
+
+/* Compact User Info */
+.userInfo {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    font-size: 12px;
+    line-height: 1.2;
+}
+.name {
+    font-weight: 600;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+}
+.email {
+    font-size: 11px;
+    color: #bbb;
+    margin-top: 2px;
+}
+
+/* Verified Badge */
+.echo {
+    font-size: 9px;
+    color: #00bcd4;
+    margin-left: 4px;
+}
+.verificationImage {
+    width: 12px;
+    height: 12px;
+    margin-left: 3px;
+}
+
+  </style>
+</head>
+<body>
+  <button class="backButton" onclick="window.location.href='maininterface.html'">
+    <i class="fas fa-arrow-left"></i> Back
+  </button>
+  
+  <div id="searchContainer">
+    <input type="text" id="searchInput" placeholder="Search by email..." oninput="searchUsers()">
+  </div>
+  
+  <div id="searchResults"></div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script>
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBcTEVvxXmv5N8dJav4xNDRy5hXZRjVeM4",
+      authDomain: "chatflow-59776.firebaseapp.com",
+      databaseURL: "https://chatflow-59776-default-rtdb.firebaseio.com",
+      projectId: "chatflow-59776",
+      storageBucket: "chatflow-59776.appspot.com",
+      messagingSenderId: "549003131640",
+      appId: "1:549003131640:web:3f4a7b8cef4c0d8a2b990d",
+      measurementId: "G-V2180PR5CR"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+
+    // Firebase Authentication
+    const auth = firebase.auth();
+
+    // Redirect to sign-in page if not authenticated
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        window.location.href = "signin.html";  // Redirect to signin page if not signed in
+      }
+    });
+
+    // Search users based on email input
+    function searchUsers() {
+      const searchInput = document.getElementById('searchInput').value.trim();
+      const searchResultsContainer = document.getElementById('searchResults');
+      
+      // Clear previous results
+      searchResultsContainer.innerHTML = '';
+
+      if (searchInput === '') return; // Exit if input is empty
+
+      // Reference to Firestore collections
+      const usersRef = firebase.firestore().collection("users");
+
+      usersRef.where("email", "==", searchInput)
+        .get()
+        .then(querySnapshot => {
+          const userEmails = [];
+          const promises = [];
+
+          querySnapshot.forEach(doc => {
+            const email = doc.data().email;
+            if (!userEmails.includes(email)) {
+              userEmails.push(email);
+
+              // Fetch profile photo
+              const photoPromise = firebase.firestore().collection("profilesphoto")
+                .where("uploaderEmail", "==", email)
+                .get()
+                .then(querySnapshot => {
+                  let latestPhotoUrl = "user_1077114.png"; // Default profile photo
+                  let latestTimestamp = 0;
+
+                  querySnapshot.forEach(doc => {
+                    const timestamp = doc.data().timestamp || 0;
+                    const photoUrl = doc.data().downloadUrl;
+
+                    if (timestamp > latestTimestamp) {
+                      latestTimestamp = timestamp;
+                      latestPhotoUrl = photoUrl;
+                    }
+                  });
+                  return latestPhotoUrl;
+                });
+
+              // Fetch name
+              const namePromise = firebase.firestore().collection("names")
+                .where("email", "==", email)
+                .get()
+                .then(snapshot => {
+                  let latestName = "Name not available";
+                  snapshot.forEach(doc => {
+                    const timestamp = doc.get("timestamp") || 0;
+                    const name = doc.get("name");
+
+                    if (timestamp > 0 && name) {
+                      latestName = name;
+                    }
+                  });
+                  return latestName;
+                });
+
+              // Fetch verification status
+              const verificationPromise = firebase.firestore().collection("verificationbridge")
+                .where("email", "==", email)
+                .get()
+                .then(querySnapshot => {
+                  let isVerified = false;
+                  querySnapshot.forEach(doc => {
+                    if (doc.exists) {
+                      isVerified = true;
+                    }
+                  });
+                  return isVerified;
+                });
+
+              // Collect all promises
+              promises.push(Promise.all([photoPromise, namePromise, verificationPromise]).then(([photoUrl, name, isVerified]) => {
+                const resultItem = document.createElement('div');
+                resultItem.classList.add('resultItem');
+                resultItem.innerHTML = `
+                  <img src="${photoUrl}" class="profilePhoto" alt="Profile Photo">
+                  <div class="userInfo">
+                    <p class="name">${name}
+                      <span class="echo" style="display: ${isVerified ? 'inline-block' : 'none'};">Falcon S</span>
+                      <img src="verification.png" class="verificationImage" style="display: ${isVerified ? 'inline' : 'none'};">
+                    </p>
+                    <p class="email">${email}</p>
+                  </div>
+                `;
+                
+                // Handle result item click
+                resultItem.onclick = () => {
+                  const currentUser = firebase.auth().currentUser;
+                  if (currentUser.email !== email) {
+                    window.location.href = `chat_layout.html?name=${name}&email=${email}`;
+                  }
+                };
+
+                searchResultsContainer.appendChild(resultItem);
+              }));
+            }
+          });
+
+          // Wait for all promises to resolve
+          Promise.all(promises);
+        });
+    }
+  </script>
+</body>
+</html>

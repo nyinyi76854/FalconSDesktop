@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Host List</title>
+    <link rel="icon" type="image/x-icon" href="FalconS.ico">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+body {
+    font-family: Arial, sans-serif;
+    background-color: #121212;  /* Dark background */
+    color: #E0E0E0;  /* Light text for contrast */
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    width: 95%;
+    max-width: 500px;
+    margin: auto;
+    padding: 15px;  /* Reduced padding */
+    background: #1E1E1E;  /* Darker background for the container */
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);  /* Darker shadow for better contrast */
+}
+
+.tab-section {
+    display: flex;
+    border-bottom: 1px solid #444;  /* Subtle border for separation */
+    margin-bottom: 12px;  /* Reduced margin */
+}
+
+.tab {
+    flex: 1;
+    text-align: center;
+    padding: 12px;  /* Reduced padding */
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 8px 8px 0 0;
+    background: #333;  /* Darker tab background */
+    transition: background 0.3s ease;
+    color: #E0E0E0;
+}
+
+.tab.active {
+    background: #007bff;
+    color: white;
+}
+
+.host-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.host-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid #444;  /* Darker border */
+    background: #1E1E1E;
+    border-radius: 6px;
+    margin-bottom: 8px;  /* Reduced margin */
+    transition: background 0.2s;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);  /* Slight shadow for hover effect */
+}
+
+.host-item:hover {
+    background: #333;  /* Slightly lighter background on hover */
+}
+
+.profile-pic {
+    width: 40px;  /* Smaller profile picture */
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 12px;  /* Reduced margin */
+    border: 2px solid #007bff;
+}
+
+.host-details {
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+.host-name {
+    font-size: 14px;  /* Smaller font size */
+    font-weight: bold;
+    color: #E0E0E0;
+}
+
+.last-message {
+    font-size: 12px;  /* Smaller font size */
+    color: #bbb;  /* Slightly muted text color */
+    margin-top: 4px;  /* Reduced margin */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: calc(100% - 50px);  /* Adjust to fit within available space */
+}
+
+.timestamp {
+    font-size: 10px;
+    color: #777;
+    margin-top: 2px;
+}
+
+.back-button {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 20px;
+    cursor: pointer;
+    color: #007bff;
+}
+
+.back-button:hover {
+    color: #0056b3;
+}
+
+.dialog {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 220px;
+    padding: 15px;
+    background-color: #222;
+    border: 1px solid #444;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+    text-align: center;
+    color: #E0E0E0;
+}
+
+.dialog-actions button {
+    padding: 6px 14px;
+    margin: 6px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.dialog-actions button:hover {
+    background-color: #0056b3;
+}
+
+#dialog-cancel {
+    background-color: #f44336;
+}
+
+#dialog-cancel:hover {
+    background-color: #d32f2f;
+}
+
+.search-button {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 20px;
+    cursor: pointer;
+    color: #007bff;
+}
+
+.floating-create-button {
+    position: fixed;
+    bottom: 15px;
+    right: 15px;
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 50%;
+    font-size: 22px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.floating-create-button:hover {
+    background: #0056b3;
+}
+
+.dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+.dialog-box {
+    background: #333;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    width: 270px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+}
+
+.dialog-box input {
+    width: 90%;
+    padding: 8px;
+    margin: 8px 0;
+    background-color: #444;
+    color: #E0E0E0;
+    border: 1px solid #555;
+    border-radius: 4px;
+}
+
+.dialog-box button {
+    margin: 8px;
+    padding: 8px 12px;
+    border: none;
+    cursor: pointer;
+}
+
+#confirmCreateButton:disabled {
+    background-color: grey;
+    cursor: not-allowed;
+}
+
+</style>
+</head>
+<body>
+    <button id="createHostButton" class="floating-create-button">
+    <i class="fas fa-plus"></i>
+</button>
+
+    <div class="back-button">
+        <i class="fas fa-arrow-left"></i>
+    </div>
+    <div class="search-button">
+    <i class="fas fa-search"></i>
+</div>
+<div class="container">
+    <div class="tab-section">
+        <div id="myHostsTab" class="tab">My Hosts</div>
+        <div id="joinedHostsTab" class="tab active">Hosts I Joined</div>
+    </div>
+
+    <ul id="myHostsList" class="host-list" style="display: none;"></ul>
+    <ul id="joinedHostsList" class="host-list"></ul>
+</div>
+<div id="createHostDialog" class="dialog-overlay">
+    <div class="dialog-box">
+        <h4>Create Host</h4>
+        <input type="text" id="inputHostName" placeholder="Enter host name (4-25 characters)">
+        <button id="confirmCreateButton" disabled>Create</button>
+        <button id="cancelCreateButton">Cancel</button>
+    </div>
+</div>
+
+
+
+<!-- Compact Dialog (hidden by default) -->
+<div id="dialog" class="dialog">
+    <div class="dialog-content">
+        <h4 id="dialog-title">Delete Host</h4>
+        <p id="dialog-message">Do you wish to delete your host right away?</p>
+        <div class="dialog-actions">
+            <button id="dialog-confirm">Yes</button>
+            <button id="dialog-cancel">No</button>
+        </div>
+    </div>
+</div>
+
+    <script>
+        const firebaseConfig = {
+        apiKey: "AIzaSyBcTEVvxXmv5N8dJav4xNDRy5hXZRjVeM4",
+        authDomain: "chatflow-59776.firebaseapp.com",
+        databaseURL: "https://chatflow-59776-default-rtdb.firebaseio.com",
+        projectId: "chatflow-59776",
+        storageBucket: "chatflow-59776.appspot.com",
+        messagingSenderId: "549003131640",
+        appId: "1:549003131640:web:3f4a7b8cef4c0d8a2b990d",
+        measurementId: "G-V2180PR5CR"
+    };
+        firebase.initializeApp(firebaseConfig);
+        const firestore = firebase.firestore();
+        const auth = firebase.auth();
+
+        const myHostsList = document.getElementById("myHostsList");
+        const joinedHostsList = document.getElementById("joinedHostsList");
+        const myHostsTab = document.getElementById("myHostsTab");
+        const joinedHostsTab = document.getElementById("joinedHostsTab");
+
+        // Switch tabs
+        myHostsTab.addEventListener("click", () => {
+            myHostsTab.classList.add("active");
+            joinedHostsTab.classList.remove("active");
+            myHostsList.style.display = "block";
+            joinedHostsList.style.display = "none";
+            fetchMyHosts();
+        });
+
+        joinedHostsTab.addEventListener("click", () => {
+            joinedHostsTab.classList.add("active");
+            myHostsTab.classList.remove("active");
+            joinedHostsList.style.display = "block";
+            myHostsList.style.display = "none";
+            fetchJoinedHosts();
+        });
+   document.getElementById("createHostButton").addEventListener("click", function () {
+    document.getElementById("createHostDialog").style.display = "flex";
+});
+
+document.getElementById("cancelCreateButton").addEventListener("click", function () {
+    document.getElementById("createHostDialog").style.display = "none";
+});
+
+document.getElementById("inputHostName").addEventListener("input", function () {
+    const confirmButton = document.getElementById("confirmCreateButton");
+    confirmButton.disabled = !(this.value.length >= 4 && this.value.length <= 25);
+});
+
+document.getElementById("confirmCreateButton").addEventListener("click", function () {
+    const hostName = document.getElementById("inputHostName").value.trim();
+    if (hostName) {
+        saveHostToFirestore(hostName);
+        document.getElementById("createHostDialog").style.display = "none";
+    }
+});
+
+function saveHostToFirestore(hostName) {
+    const currentUserEmail = firebase.auth().currentUser?.email; // Default email if user is not logged in
+
+    const hostData = {
+        hostname: hostName,
+        creator: currentUserEmail,
+        timestamp: Date.now()
+    };
+
+    firestore.collection("host").add(hostData)
+        .then(docRef => {
+            console.log("Host created successfully with ID:", docRef.id);
+            const hostId = docRef.id;
+            const subscriberData = {
+                email: currentUserEmail,
+                timestamp: Date.now()
+            };
+
+            firestore.collection("host").doc(hostId).collection("subscribers").add(subscriberData)
+                .then(() => console.log("Subscriber added successfully!"))
+                .catch(error => console.error("Failed to add subscriber:", error));
+        })
+        .catch(error => console.error("Failed to create host:", error));
+}
+
+
+document.querySelector(".back-button").addEventListener("click", function() {
+        window.location.href = "maininterface.html";
+    });
+        // Redirect to hostsearch.html when search icon is clicked
+document.querySelector('.search-button').addEventListener('click', () => {
+    window.location.href = 'hostsearchandstart.html';
+});
+
+        function getLatestMessage(hostId, createdTimestamp, callback) {
+            firestore.collection("host").doc(hostId).collection("hostchat").get()
+                .then(messagesSnapshot => {
+                    let latestMessage = "Host was created!";
+                    let latestTimestamp = createdTimestamp;
+
+                    messagesSnapshot.forEach(doc => {
+                        const data = doc.data();
+                        if (data.timestamp > latestTimestamp) {
+                            latestTimestamp = data.timestamp;
+                            latestMessage = data.message || latestMessage;
+                        }
+                    });
+
+                    callback(latestMessage, latestTimestamp);
+                })
+                .catch(() => callback("Host was created!", createdTimestamp));
+        }
+
+        function loadProfileImage(hostId, imgElement) {
+            firestore.collection("host").doc(hostId).collection("hostprofile").get()
+                .then(snapshot => {
+                    if (!snapshot.empty) {
+                        const profileUrl = snapshot.docs[0].data().profileUrl;
+                        imgElement.src = profileUrl || "user_1077114.png";
+                    } else {
+                        imgElement.src = "user_1077114.png";
+                    }
+                })
+                .catch(() => {
+                    imgElement.src = "user_1077114.png";
+                });
+        }
+
+        function displayHost(listElement, hostId, hostname, latestMessage, latestTimestamp) {
+    const li = document.createElement("li");
+    li.classList.add("host-item");
+
+    const img = document.createElement("img");
+    img.classList.add("profile-pic");
+    loadProfileImage(hostId, img);
+
+    const details = document.createElement("div");
+    details.classList.add("host-details");
+
+    const name = document.createElement("strong");
+    name.textContent = hostname;
+
+    const lastMessage = document.createElement("p");
+    lastMessage.classList.add("last-message");
+
+    // Check if the message is an image or video
+    if (isImageUrl(latestMessage)) {
+        lastMessage.textContent = "Image message";
+        lastMessage.style.color = "#007bff"; // Blue color
+    } else if (isVideoUrl(latestMessage)) {
+        lastMessage.textContent = "Video message";
+        lastMessage.style.color = "#007bff"; // Blue color
+    } else {
+        lastMessage.textContent = latestMessage; // Display text message normally
+    }
+
+    const timestamp = document.createElement("p");
+    timestamp.classList.add("timestamp");
+    timestamp.textContent = formatTimestamp(latestTimestamp); // Convert timestamp to readable format
+
+    details.appendChild(name);
+    details.appendChild(lastMessage);
+    details.appendChild(timestamp);
+    li.appendChild(img);
+    li.appendChild(details);
+    listElement.appendChild(li);
+// Right-click event for showing dialog
+    li.addEventListener("contextmenu", (event) => {
+        event.preventDefault(); // Prevent the default right-click menu
+        
+        // Show the custom dialog
+        showDialog(hostId);
+    });
+    li.addEventListener("click", () => {
+        window.location.href = `hostchat.html?hostId=${encodeURIComponent(hostId)}&hostname=${encodeURIComponent(hostname)}`;
+    });
+}
+
+
+function showDialog(hostId) {
+    const dialog = document.getElementById('dialog');
+    const dialogTitle = document.getElementById('dialog-title');
+    const dialogMessage = document.getElementById('dialog-message');
+    
+    // Check if the host is created by the current user
+    const currentUserEmail = firebase.auth().currentUser?.email;
+
+    const firestore = firebase.firestore();
+    firestore.collection("host").doc(hostId).get()
+        .then((doc) => {
+            if (doc.exists) {
+                const creator = doc.get("creator");
+                if (creator === currentUserEmail) {
+                    // Show delete dialog
+                    dialogTitle.textContent = "Delete Host";
+                    dialogMessage.textContent = "Do you wish to delete your host right away?";
+                    document.getElementById('dialog-confirm').onclick = function() {
+                        deleteHost(hostId);
+                    };
+                } else {
+                    // Show leave dialog
+                    dialogTitle.textContent = "Leave Host";
+                    dialogMessage.textContent = "Are you sure that you wish to leave this host?";
+                    document.getElementById('dialog-confirm').onclick = function() {
+                        leaveHost(hostId);
+                    };
+                }
+
+                // Show the dialog
+                dialog.style.display = 'block';
+            }
+        });
+}
+// Function to delete host
+function deleteHost(hostId) {
+    const firestore = firebase.firestore();
+    firestore.collection("host").doc(hostId).delete()
+        .then(() => {
+            // Dismiss the dialog immediately
+            document.getElementById('dialog').style.display = 'none';
+        })
+        .catch((error) => {
+            console.error("Error deleting host:", error);
+        });
+}
+
+// Function to leave host
+function leaveHost(hostId) {
+    const currentUserEmail = firebase.auth().currentUser?.email;
+    const firestore = firebase.firestore();
+    const subscribersRef = firestore.collection("host").doc(hostId).collection("subscribers");
+
+    subscribersRef.where("email", "==", currentUserEmail).get()
+        .then((snapshot) => {
+            const doc = snapshot.docs[0];
+            if (doc) {
+                doc.ref.delete()
+                    .then(() => {
+                        // Dismiss the dialog immediately
+                        document.getElementById('dialog').style.display = 'none';
+                    });
+            }
+        })
+        .catch((error) => {
+            console.error("Error leaving host:", error);
+        });
+}
+
+// Close the dialog if the user clicks anywhere outside it
+document.addEventListener("click", (event) => {
+    const dialog = document.getElementById('dialog');
+    if (!dialog.contains(event.target) && event.target !== dialog) {
+        dialog.style.display = 'none';
+    }
+});
+
+// Close the dialog when "No" button is clicked
+document.getElementById('dialog-cancel').addEventListener("click", () => {
+    document.getElementById('dialog').style.display = 'none';
+});
+
+function isImageUrl(text) {
+            return text.startsWith("https://firebasestorage.googleapis.com") && text.includes("/hostchatimage%2F");
+        }
+
+        function isVideoUrl(text) {
+            return text.startsWith("https://firebasestorage.googleapis.com") && text.includes("/hostchatvideo%2F");
+        }
+function formatTimestamp(timestamp) {
+    if (!timestamp) return "Fetching...";
+    const date = new Date(timestamp);
+    return date.toLocaleString(); // Adjust format as needed
+}
+        function fetchMyHosts() {
+            const userEmail = auth.currentUser.email;
+            myHostsList.innerHTML = "<p>Loading...</p>";
+
+            firestore.collection("host")
+                .where("creator", "==", userEmail)
+                .get()
+                .then(snapshot => {
+                    myHostsList.innerHTML = "";
+                    if (snapshot.empty) {
+                        myHostsList.innerHTML = "<p>No host found</p>";
+                    } else {
+                        let hosts = [];
+                        snapshot.forEach(doc => {
+                            const host = doc.data();
+                            const hostId = doc.id;
+                            getLatestMessage(hostId, host.timestamp, (latestMessage, latestTimestamp) => {
+                                hosts.push({ hostId, hostname: host.hostname, latestMessage, latestTimestamp });
+                                hosts.sort((a, b) => b.latestTimestamp - a.latestTimestamp);
+                                myHostsList.innerHTML = "";
+                                hosts.forEach(h => displayHost(myHostsList, h.hostId, h.hostname, h.latestMessage, h.latestTimestamp));
+                            });
+                        });
+                    }
+                })
+                .catch(error => console.error("Error fetching hosts:", error));
+        }
+
+      function fetchJoinedHosts() {
+    const userEmail = auth.currentUser.email;
+    joinedHostsList.innerHTML = "<p>Loading...</p>";
+
+    firestore.collection("host").onSnapshot(snapshot => {  // Using onSnapshot for real-time updates
+        let joinedHosts = [];
+        snapshot.forEach(doc => {
+            const hostId = doc.id;
+            firestore.collection("host").doc(hostId).collection("subscribers")
+                .where("email", "==", userEmail)
+                .onSnapshot(subscribersSnapshot => {  // Real-time update for subscribers collection
+                    if (!subscribersSnapshot.empty) {
+                        const host = doc.data();
+                        getLatestMessage(hostId, host.timestamp, (latestMessage, latestTimestamp) => {
+                            joinedHosts.push({ hostId, hostname: host.hostname, latestMessage, latestTimestamp });
+                            joinedHosts.sort((a, b) => b.latestTimestamp - a.latestTimestamp);
+                            joinedHostsList.innerHTML = "";
+                            joinedHosts.forEach(h => displayHost(joinedHostsList, h.hostId, h.hostname, h.latestMessage, h.latestTimestamp));
+                        });
+                    }
+                });
+        });
+    }, error => {
+        console.error("Error fetching joined hosts:", error);
+    });
+}
+
+
+        auth.onAuthStateChanged(user => {
+            if (user) fetchJoinedHosts();
+        });
+    </script>
+</body>
+</html>
