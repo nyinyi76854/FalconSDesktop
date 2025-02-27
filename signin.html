@@ -179,21 +179,20 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// Handle Sign In with Redirect
-document.getElementById("googleSignInBtn").addEventListener("click", function() {
+// Handle Sign In with Popup
+document.getElementById("googleSignInBtn").addEventListener("click", function () {
     const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithRedirect(provider);
+
+    auth.signInWithPopup(provider)
+        .then((result) => {
+            const user = result.user;
+            checkUserInDatabase(user.email);
+        })
+        .catch(error => {
+            document.getElementById("error-message").textContent = "Error: " + error.message;
+        });
 });
 
-// Check for redirect result
-auth.getRedirectResult().then((result) => {
-    if (result.credential) {
-        const user = result.user;
-        checkUserInDatabase(user.email);
-    }
-}).catch(error => {
-    document.getElementById("error-message").textContent = "Error: " + error.message;
-});
 
 const texts = [
     "• Falcon S is a powerful messaging app.",
