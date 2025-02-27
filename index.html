@@ -35,18 +35,23 @@
         firebase.initializeApp(firebaseConfig);
 
        function checkAuthState() {
-        firebase.auth().onAuthStateChanged(user => {
-            setTimeout(() => {
-                if (user) {
-                    // Redirect to maininterface.html in Electron
-                    window.location.href = "electron://maininterface.html"; // Electron local file
+    firebase.auth().onAuthStateChanged(user => {
+        setTimeout(() => {
+            if (user) {
+                if (window.electron && typeof window.electron.loadMainInterface === "function") {
+                    // Running inside Electron → Load the local maininterface.html
+                    window.electron.loadMainInterface();
                 } else {
-                    // Redirect to signin.html (normal web flow)
-                    window.location.href = "signin.html";
+                    // Running in a normal web browser → Redirect to hosted maininterface.html
+                    window.location.href = "maininterface.html";
                 }
-            }, 5000); // 5 seconds delay
-        });
-    }
+            } else {
+                window.location.href = "signin.html";
+            }
+        }, 5000);
+    });
+}
+
     </script>
 
     <style>
