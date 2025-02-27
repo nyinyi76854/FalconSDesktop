@@ -5,15 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welcome</title>
 <link rel="icon" type="image/x-icon" href="FalconS.ico">
-<script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebPage",
-      "name": "Falcon S Messaging",
-      "description": "Falcon S Messaging is a secure, easy-to-use messaging app for friends and family.",
-      "url": "https://falcons-egw.pages.dev/"
-    }
-    </script>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -34,7 +26,7 @@
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
 
-       function checkAuthState() {
+     function checkAuthState() {
     firebase.auth().onAuthStateChanged(user => {
         setTimeout(() => {
             if (user) {
@@ -43,14 +35,19 @@
                     window.electron.loadMainInterface();
                 } else {
                     // Running in a normal web browser → Redirect to hosted maininterface.html
-                    window.location.href = "maininterface.html";
+                    if (window.location.pathname !== "/maininterface.html") {
+                        window.location.href = "maininterface.html";
+                    }
                 }
             } else {
-                window.location.href = "signin.html";
+                if (window.location.pathname !== "/signin.html") {
+                    window.location.href = "signin.html";
+                }
             }
         }, 5000);
     });
 }
+
 
     </script>
 
