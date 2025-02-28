@@ -39,7 +39,8 @@
             firebase.auth().onAuthStateChanged(user => {
                 setTimeout(() => {
                     if (user) {
-                        window.location.href = "maininterface.html";
+                        window.opener.postMessage({ userAuthenticated: true, user: user }, '*');
+        window.close();
                     } else {
                         window.location.href = "signin.html";
                     }
