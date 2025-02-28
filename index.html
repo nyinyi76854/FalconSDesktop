@@ -4,16 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welcome</title>
-    <link rel="icon" type="image/x-icon" href="FalconS.ico">
-    <script type="application/ld+json">
-        {
-          "@context": "https://schema.org",
-          "@type": "WebPage",
-          "name": "Falcon S Messaging",
-          "description": "Falcon S Messaging is a secure, easy-to-use messaging app for friends and family.",
-          "url": "https://falcons-egw.pages.dev/"
-        }
-    </script>
+<link rel="icon" type="image/x-icon" href="FalconS.ico">
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -37,19 +29,13 @@
         // Function to check authentication state
         function checkAuthState() {
             firebase.auth().onAuthStateChanged(user => {
-                if (user) {
-                    // Send message to Electron (check if window.opener exists)
-                    if (window.opener) {
-                        window.opener.postMessage({ userAuthenticated: true, user: user }, '*');
+                setTimeout(() => {
+                    if (user) {
+                        window.location.href = "maininterface.html";
                     } else {
-                        // Handle the case when it's not a popup and Electron window needs to receive this
-                        // For Electron, use IPC renderer (you may use an Electron preload script to communicate)
-                        console.log('User authenticated:', user);
+                        window.location.href = "signin.html";
                     }
-                    window.close(); // Close the splash screen
-                } else {
-                    window.location.href = "signin.html"; // Redirect to sign-in page
-                }
+                }, 5000); // 5 seconds delay
             });
         }
     </script>
