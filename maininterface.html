@@ -1222,20 +1222,14 @@ function loadPersonalChat(userEmail) {
                                     nameRow.appendChild(name);
 
                                     if (isVerified) {
-                                        const echoLabel = document.createElement("span");
-                                        echoLabel.innerText = "Falcon S";
-                                        echoLabel.style.color = "blue";
-                                        echoLabel.style.marginLeft = "8px";
-                                        echoLabel.style.fontSize = "12px";
-                                        echoLabel.style.fontWeight = "bold";
-
+                                       
                                         const verificationIcon = document.createElement("img");
                                         verificationIcon.src = "verification.png";
                                         verificationIcon.style.width = "14px";
                                         verificationIcon.style.height = "14px";
                                         verificationIcon.style.marginLeft = "5px";
 
-                                        nameRow.appendChild(echoLabel);
+                                        
                                         nameRow.appendChild(verificationIcon);
                                     }
 
