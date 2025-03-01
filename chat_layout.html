@@ -676,30 +676,32 @@ function loadMessages() {
 
             snapshot.forEach((doc) => {
                 const messageData = doc.data();
+                const messageId = doc.id;
 
-                // Check if the partnerEmail is part of the message participants
                 if (
                     (messageData.senderEmail === userEmail && messageData.receiverEmail === partnerEmail) ||
                     (messageData.senderEmail === partnerEmail && messageData.receiverEmail === userEmail)
                 ) {
-                    const message = {
-                        id: doc.id,
-                        ...messageData
-                    };
+                    const message = { id: messageId, ...messageData };
                     messages.push(message);
+
+                    // **Mark as Read if it's received & unread**
+                    if (messageData.senderEmail === partnerEmail && !messageData.isRead) {
+                        messagesRef.doc(messageId).update({ isRead: true });
+                    }
                 }
             });
 
-            // Sort messages by sentTime (oldest first)
+            // Sort messages by time (oldest first)
             messages.sort((a, b) => a.sentTime - b.sentTime);
 
-            // Clear the container and append sorted messages
+            // Clear container and append messages
             messagesContainer.innerHTML = "";
             messages.forEach((data) => {
                 const isSent = data.senderEmail === userEmail;
                 const messageDiv = document.createElement("div");
                 messageDiv.classList.add("message", isSent ? "sent" : "received");
-                messageDiv.id = data.id; // Set a unique ID for the message
+                messageDiv.id = data.id;
 
                 // Render based on message type
                 if (isImageUrl(data.text)) {
@@ -708,8 +710,8 @@ function loadMessages() {
                     img.alt = "Sent Image";
                     img.style.maxWidth = "200px";
                     img.style.borderRadius = "10px";
-                    img.style.cursor = "pointer"; 
-    img.addEventListener('click', () => openImageModal(img.src));
+                    img.style.cursor = "pointer";
+                    img.addEventListener('click', () => openImageModal(img.src));
                     messageDiv.appendChild(img);
                 } else if (isVideoUrl(data.text)) {
                     const video = document.createElement("video");
@@ -719,20 +721,17 @@ function loadMessages() {
                     video.style.borderRadius = "10px";
                     messageDiv.appendChild(video);
                 } else if (isLink(data.text)) {
-                    // If message is a link, make it pink and clickable
                     const linkElement = document.createElement("a");
                     linkElement.href = data.text.startsWith("http") ? data.text : "https://" + data.text;
                     linkElement.textContent = data.text;
-                    linkElement.target = "_blank"; // Open in a new tab
+                    linkElement.target = "_blank";
                     linkElement.style.color = "pink";
                     linkElement.style.textDecoration = "underline";
                     linkElement.style.cursor = "pointer";
-
                     linkElement.addEventListener("click", (event) => {
-        event.preventDefault(); // Prevent default behavior
-        window.open(linkElement.href, "_blank"); // Open in the default browser
-    });
-
+                        event.preventDefault();
+                        window.open(linkElement.href, "_blank");
+                    });
                     messageDiv.appendChild(linkElement);
                 } else {
                     const textElement = document.createElement("p");
@@ -741,7 +740,12 @@ function loadMessages() {
                     messageDiv.appendChild(textElement);
                 }
 
-                // Add event listeners for click and selection
+                // Add status indicator (Sent / Seen)
+                const statusSpan = document.createElement("span");
+                statusSpan.classList.add("message-status");
+                statusSpan.textContent = isSent ? (data.isRead ? "Seen" : "Sent") : "";
+                messageDiv.appendChild(statusSpan);
+
                 messageDiv.addEventListener("click", (event) => {
                     if (isSent) {
                         if (isSelectionMode) {
@@ -759,6 +763,7 @@ function loadMessages() {
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         });
 }
+
 function isLink(text) {
     return text.startsWith("https://") || text.startsWith("www.");
 }
