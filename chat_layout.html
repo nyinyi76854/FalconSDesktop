@@ -776,12 +776,13 @@ statusSpan.classList.add("message-status");
 if (isSent) {
     const icon = document.createElement("i");
     if (data.isRead) {
-        icon.classList.add("fas", "fa-check-circle", "seen"); // Green check for seen
+        icon.classList.add("fa-solid", "fa-circle-check", "seen"); // Green check for seen
     } else {
-        icon.classList.add("fas", "fa-check-circle", "sent"); // Black check for sent
+        icon.classList.add("fa-solid", "fa-circle-check", "sent"); // Black check for sent
     }
     statusSpan.appendChild(icon);
 }
+
 
 messageDiv.appendChild(statusSpan);
 
