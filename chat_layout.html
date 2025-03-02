@@ -133,32 +133,32 @@ body {
     font-size: 1rem; /* Adjust size for readability */
 }
 
-/* Status icon styling */
-.message-status {
+/* Status wrapper to ensure consistent placement */
+.status-wrapper {
     position: absolute;
     bottom: 4px;
-    right: 10px; /* Adjust for proper alignment */
-    font-size: 14px;
-    display: inline-flex;
+    right: 6px;
+    display: flex;
     align-items: center;
+    justify-content: center;
+    width: 16px; /* Ensures both icons occupy the same space */
+    height: 16px;
 }
 
 /* Sent (Single check) */
-.message-status i.sent {
+.status-wrapper .sent {
     font-family: "Font Awesome 6 Free";
     font-weight: 900;
     color: black; /* Black for sent */
     position: absolute;
-    right: 0;
 }
 
 /* Seen (Double check) */
-.message-status i.seen {
+.status-wrapper .seen {
     font-family: "Font Awesome 6 Free";
     font-weight: 900;
     color: white; /* White for seen */
     position: absolute;
-    right: 0;
 }
 
 
@@ -778,20 +778,21 @@ function loadMessages() {
                     messageDiv.appendChild(textElement);
                 }
 
-             const statusSpan = document.createElement("span");
-statusSpan.classList.add("message-status");
+             const statusWrapper = document.createElement("div");
+statusWrapper.classList.add("status-wrapper");
 
-if (isSent) {
-    const icon = document.createElement("i");
-    if (data.isRead) {
-        icon.classList.add("fa-solid", "fa-check-circle", "seen"); // Green check for seen
-    } else {
-        icon.classList.add("fa-solid", "fa-check-circle", "sent"); // Black check for sent
-    }
-    statusSpan.appendChild(icon);
+const icon = document.createElement("i");
+icon.classList.add("fa-solid", "fa-check-circle");
+
+if (data.isRead) {
+    icon.classList.add("seen"); // White check for seen
+} else {
+    icon.classList.add("sent"); // Black check for sent
 }
 
-messageDiv.appendChild(statusSpan);
+statusWrapper.appendChild(icon);
+messageDiv.appendChild(statusWrapper);
+
                 messageDiv.addEventListener("click", (event) => {
                     if (isSent) {
                         if (isSelectionMode) {
