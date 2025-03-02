@@ -132,7 +132,6 @@ body {
     font-weight: bold; /* Make text bold */
     font-size: 1rem; /* Adjust size for readability */
 }
-
 /* Status wrapper to ensure consistent placement */
 .status-wrapper {
     position: absolute;
@@ -141,8 +140,8 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 16px; /* Ensures both icons occupy the same space */
-    height: 16px;
+    width: auto; /* Remove fixed width to avoid extra space */
+    height: auto; /* Remove fixed height */
 }
 
 /* Sent (Single check) */
@@ -150,7 +149,9 @@ body {
     font-family: "Font Awesome 6 Free";
     font-weight: 900;
     color: black; /* Black for sent */
+    font-size: 14px; /* Ensure consistent icon size */
     position: absolute;
+    right: 0; /* Align it to the right */
 }
 
 /* Seen (Double check) */
@@ -158,8 +159,11 @@ body {
     font-family: "Font Awesome 6 Free";
     font-weight: 900;
     color: white; /* White for seen */
+    font-size: 14px; /* Ensure consistent icon size */
     position: absolute;
+    right: 0; /* Align it to the right */
 }
+
 
 
 /* Adjustments for media elements within messages */
