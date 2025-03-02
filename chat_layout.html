@@ -122,7 +122,7 @@ body {
 }
 /* Sent message styles */
 .sent {
-    align-self: flex-end;
+    align-self: flex-start; /* Move to the left side */
     background-color: #0084ff; /* Messenger blue */
     color: #ffffff; /* White text for contrast */
     border-bottom-right-radius: 5px; /* Slightly sharper edge for the tail effect */
@@ -133,6 +133,8 @@ body {
     padding-right: 40px; /* Extra space for the status icon outside the message */
     max-width: 75%; /* Ensure message doesn’t overflow */
     word-wrap: break-word;
+    padding-left: 10px; /* Create space on the left for status icons */
+    border-bottom-left-radius: 5px; /* Rounded corner on the left */
 }
 
 /* Status wrapper to ensure it goes outside of the message bubble */
@@ -152,6 +154,8 @@ body {
     font-family: "Font Awesome 6 Free";
     font-weight: 900;
     color: black; /* Black for sent */
+    background-color: transparent; /* Remove extra blue bubble */
+    border: none; /* No background box */
 }
 
 /* Seen (Double check) */
@@ -159,6 +163,8 @@ body {
     font-family: "Font Awesome 6 Free";
     font-weight: 900;
     color: white; /* White for seen */
+    background-color: transparent; /* Ensure no extra background */
+    border: none; /* No background box */
 }
 
 
