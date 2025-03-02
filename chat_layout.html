@@ -137,25 +137,28 @@ body {
 .message-status {
     position: absolute;
     bottom: 4px;
-    right: 6px;
+    right: 10px; /* Adjust for proper alignment */
     font-size: 14px;
     display: inline-flex;
     align-items: center;
 }
 
-
 /* Sent (Single check) */
-.message-status .sent {
+.message-status i.sent {
     font-family: "Font Awesome 6 Free";
     font-weight: 900;
     color: black; /* Black for sent */
+    position: absolute;
+    right: 0;
 }
 
 /* Seen (Double check) */
-.message-status .seen {
+.message-status i.seen {
     font-family: "Font Awesome 6 Free";
     font-weight: 900;
-    color: white; /* Green for seen */
+    color: white; /* White for seen */
+    position: absolute;
+    right: 0;
 }
 
 
