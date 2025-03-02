@@ -778,20 +778,23 @@ function loadMessages() {
                     messageDiv.appendChild(textElement);
                 }
 
-             const statusWrapper = document.createElement("div");
-statusWrapper.classList.add("status-wrapper");
+             if (isSent) { 
+    const statusWrapper = document.createElement("div");
+    statusWrapper.classList.add("status-wrapper");
 
-const icon = document.createElement("i");
-icon.classList.add("fa-solid", "fa-check-circle");
+    const icon = document.createElement("i");
+    icon.classList.add("fa-solid", "fa-check-circle");
 
-if (data.isRead) {
-    icon.classList.add("seen"); // White check for seen
-} else {
-    icon.classList.add("sent"); // Black check for sent
+    if (data.isRead) {
+        icon.classList.add("seen"); // White check for seen
+    } else {
+        icon.classList.add("sent"); // Black check for sent
+    }
+
+    statusWrapper.appendChild(icon);
+    messageDiv.appendChild(statusWrapper);
 }
 
-statusWrapper.appendChild(icon);
-messageDiv.appendChild(statusWrapper);
 
                 messageDiv.addEventListener("click", (event) => {
                     if (isSent) {
