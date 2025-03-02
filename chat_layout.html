@@ -12,7 +12,8 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 
     <!-- Font Awesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
 
     <script>
         const firebaseConfig = {
@@ -143,12 +144,12 @@ body {
 
 /* Sent status (black check circle) */
 .message-status .sent {
-    color: #333333; /* Brighter black */
+    color: #000000; /* Black check circle */
 }
 
-/* Seen status (green check circle) */
+/* Seen status (white check circle) */
 .message-status .seen {
-    color: #28a745; /* Green check circle */
+    color: #ffffff; /* White check circle */
 }
 
 
@@ -768,21 +769,22 @@ function loadMessages() {
                     messageDiv.appendChild(textElement);
                 }
 
-                // Add status indicator (Sent / Seen)
+             // Add status indicator (Sent / Seen)
 const statusSpan = document.createElement("span");
 statusSpan.classList.add("message-status");
 
 if (isSent) {
     const icon = document.createElement("i");
     if (data.isRead) {
-        icon.classList.add("fas", "fa-check-circle", "seen"); // Blue check for seen
+        icon.classList.add("fas", "fa-check-circle", "seen"); // Green check for seen
     } else {
-        icon.classList.add("fas", "fa-check-circle", "sent"); // Single check for sent
+        icon.classList.add("fas", "fa-check-circle", "sent"); // Black check for sent
     }
     statusSpan.appendChild(icon);
 }
 
 messageDiv.appendChild(statusSpan);
+
 
 
                 messageDiv.addEventListener("click", (event) => {
