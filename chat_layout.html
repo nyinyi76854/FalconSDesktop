@@ -121,7 +121,6 @@ body {
     font-size: 1rem; /* Adjust size for readability */
 }
 /* Sent message styles */
-/* Sent message styles */
 .sent {
     align-self: flex-end;
     background-color: #0084ff; /* Messenger blue */
@@ -131,21 +130,21 @@ body {
     font-weight: bold; /* Make text bold */
     font-size: 1rem; /* Adjust size for readability */
     position: relative; /* Keep position relative for status icon placement */
-    padding-right: 16px; /* Adjust padding to make space for icon */
+    padding-right: 40px; /* Extra space for the status icon outside the message */
     max-width: 75%; /* Ensure message doesn’t overflow */
     word-wrap: break-word;
 }
 
-/* Status wrapper to ensure consistent placement */
+/* Status wrapper to ensure it goes outside of the message bubble */
 .status-wrapper {
     position: absolute;
-    bottom: 4px;
-    right: 8px; /* Adjust right position */
+    bottom: 0;
+    right: -24px; /* Move it outside to the right of the bubble */
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 16px; /* Adjust size to match icon */
-    height: 16px;
+    width: 20px; /* Adjust size to match icon */
+    height: 20px;
 }
 
 /* Sent (Single check) */
@@ -161,6 +160,7 @@ body {
     font-weight: 900;
     color: white; /* White for seen */
 }
+
 
 
 
