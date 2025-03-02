@@ -146,10 +146,11 @@ body {
     color: #333333; /* Brighter black */
 }
 
-/* Seen status (bright blue check circle) */
+/* Seen status (green check circle) */
 .message-status .seen {
-    color: #009dff; /* Brighter blue */
+    color: #28a745; /* Green check circle */
 }
+
 
 /* Adjustments for media elements within messages */
 .media {
@@ -776,7 +777,7 @@ if (isSent) {
     if (data.isRead) {
         icon.classList.add("fas", "fa-check-circle", "seen"); // Blue check for seen
     } else {
-        icon.classList.add("fas", "fa-check", "sent"); // Single check for sent
+        icon.classList.add("fas", "fa-check-circle", "sent"); // Single check for sent
     }
     statusSpan.appendChild(icon);
 }
