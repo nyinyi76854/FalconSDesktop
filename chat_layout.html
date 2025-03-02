@@ -123,7 +123,7 @@ body {
 /* Sent message styles */
 /* Sent message styles */
 .sent {
-    align-self: flex-end;
+    align-self: flex-end; /* Keep sent message aligned to the right */
     background-color: #0084ff; /* Messenger blue */
     color: #ffffff; /* White text for contrast */
     border-bottom-right-radius: 5px; /* Slightly sharper edge for the tail effect */
@@ -131,7 +131,7 @@ body {
     font-weight: bold; /* Make text bold */
     font-size: 1rem; /* Adjust size for readability */
     position: relative; /* Keep position relative for status icon placement */
-    padding-right: 16px; /* Adjust padding to make space for icon */
+    padding-right: 32px; /* Make space for the status icon */
     max-width: 75%; /* Ensure message doesn’t overflow */
     word-wrap: break-word;
 }
@@ -140,7 +140,7 @@ body {
 .status-wrapper {
     position: absolute;
     bottom: 4px;
-    right: 8px; /* Adjust right position */
+    right: 0; /* Ensure it stays outside and aligned to the right */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -161,7 +161,6 @@ body {
     font-weight: 900;
     color: white; /* White for seen */
 }
-
 
 
 
