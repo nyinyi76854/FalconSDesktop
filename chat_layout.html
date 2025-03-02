@@ -10,8 +10,9 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
-   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
 
 
 
@@ -769,24 +770,20 @@ function loadMessages() {
                     messageDiv.appendChild(textElement);
                 }
 
-             // Add status indicator (Sent / Seen)
-// Add status indicator (Sent / Seen)
-const statusSpan = document.createElement("span");
+             const statusSpan = document.createElement("span");
 statusSpan.classList.add("message-status");
 
 if (isSent) {
     const icon = document.createElement("i");
     if (data.isRead) {
-        icon.classList.add("fa-solid", "fa-check-double", "seen"); // Seen (double check)
+        icon.classList.add("fa-solid", "fa-check-circle", "seen"); // Green check for seen
     } else {
-        icon.classList.add("fa-solid", "fa-check", "sent"); // Sent (single check)
+        icon.classList.add("fa-solid", "fa-check-circle", "sent"); // Black check for sent
     }
     statusSpan.appendChild(icon);
 }
 
 messageDiv.appendChild(statusSpan);
-
-
                 messageDiv.addEventListener("click", (event) => {
                     if (isSent) {
                         if (isSelectionMode) {
