@@ -123,12 +123,11 @@ body.fade-out {
     transition: transform 0.3s ease;
 }
 
-
 .right-section {
     width: 50%;
     max-width: 400px;
     padding: 20px;
-    background: linear-gradient(135deg, #6e7c7c, #a1a8a8); /* Gray Gradient */
+    background: #ffffff; /* Changed to white */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -144,12 +143,10 @@ body.fade-out {
     transition: right 0.3s ease;
 }
 
-
 /* When sidebar is open */
 .main-container.sidebar-open .right-section {
     right: 0;
 }
-
 
 /* Profile Photo */
 .profile-photo {
@@ -157,36 +154,39 @@ body.fade-out {
     height: 120px;
     border-radius: 50%;
     border: 4px solid #0ff;
-    margin-bottom: 10px; /* Adjusted margin to create space for verification below */
+    margin-bottom: 10px;
     object-fit: cover;
     box-shadow: 0 4px 15px rgba(0, 255, 255, 0.5);
 }
 
-/* Verified info container */
+/* Profile Container */
 .profile-container {
     display: flex;
-    flex-direction: column; /* Stack the text and icon vertically */
+    flex-direction: column;
     align-items: center;
-    margin-top: 10px; /* Added top margin for some space between profile photo and verified info */
+    margin-top: 10px;
+    background: #ffffff; /* Changed to white */
+    padding: 10px;
+    border-radius: 10px;
 }
 
+/* Verified Info */
 .verified-info {
-    display: none; /* Initially hidden */
-    align-items: center; /* Horizontally align text and icon */
-    margin-top: 10px; /* Spacing between profile photo and verification section */
+    display: none;
+    align-items: center;
+    margin-top: 10px;
 }
 
 .verified-account-text {
-    font-size: 10px; /* Smaller text size */
-    color: #007bff; /* A lighter blue for better contrast */
-    margin-right: 15px; /* Increased distance between text and icon */
+    font-size: 10px;
+    color: #007bff;
+    margin-right: 15px;
 }
 
 .verified-icon {
-    font-size: 12px; /* Slightly smaller icon */
-    color: #007bff; /* Same blue as text for consistency */
+    font-size: 12px;
+    color: #007bff;
 }
-
 
 /* Search Button */
 .search-button {
@@ -207,6 +207,7 @@ body.fade-out {
     box-shadow: 0 4px 15px rgba(0, 255, 255, 0.4);
     transition: transform 0.2s, box-shadow 0.3s;
 }
+
 .search-button:hover {
     transform: scale(1.2);
     box-shadow: 0 6px 20px rgba(0, 255, 255, 0.6);
@@ -218,13 +219,13 @@ body.fade-out {
     flex-direction: column;
     align-items: center;
     width: 100%;
-    background: linear-gradient(135deg, #6a5d4d, #7f8c8d); /* Warm brown gradient */
+    background: #000000; /* Changed to black */
     padding: 30px;
     border-radius: 15px;
     text-align: center;
     border: 1px solid #444;
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
-    color: #fff;
+    color: #ffffff; /* White text for contrast */
 }
 
 /* User Information */
@@ -238,7 +239,7 @@ body.fade-out {
 
 .account-info p {
     font-size: 18px;
-    color: #fff;
+    color: #ffffff; /* White text */
     margin: 5px 0;
     transition: color 0.3s, transform 0.3s;
 }
