@@ -11,302 +11,27 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+/* General Reset and Body Styling */
 body {
-    font-family: 'Poppins', sans-serif; /* Modern font */
-    margin: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    width: 100vw;
-    background: linear-gradient(135deg, #1E1E1E, #3A3A3A); /* Dark gradient */
-    overflow: hidden;
-    opacity: 1;
-    transition: opacity 0.5s ease-in-out;
+  font-family: 'Poppins', sans-serif;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+  background: linear-gradient(135deg, #1E1E1E, #3A3A3A);
+  overflow: hidden;
+  opacity: 1;
+  transition: opacity 0.5s ease-in-out;
 }
 
-
-
-.right-section {
-    width: 50%;
-    max-width: 400px;
-    padding: 20px;
-    background: linear-gradient(135deg, #6e7c7c, #a1a8a8); /* Gray Gradient */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    box-sizing: border-box;
-    overflow-y: auto;
-    position: absolute;
-    top: 0;
-    right: -90%; /* Initially Hidden */
-    height: 100%;
-    border: 2px solid #ccc; /* Gray border */
-    border-radius: 15px 0 0 15px;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
-    transition: right 0.3s ease;
-}
-
-
-/* When sidebar is open */
-.main-container.sidebar-open .right-section {
-    right: 0;
-}
-
-
-/* Profile Photo */
-.profile-photo {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    border: 4px solid #0ff;
-    margin-bottom: 10px; /* Adjusted margin to create space for verification below */
-    object-fit: cover;
-    box-shadow: 0 4px 15px rgba(0, 255, 255, 0.5);
-}
-
-/* Verified info container */
-.profile-container {
-    display: flex;
-    flex-direction: column; /* Stack the text and icon vertically */
-    align-items: center;
-    margin-top: 10px; /* Added top margin for some space between profile photo and verified info */
-}
-
-.verified-info {
-    display: none; /* Initially hidden */
-    align-items: center; /* Horizontally align text and icon */
-    margin-top: 10px; /* Spacing between profile photo and verification section */
-}
-
-.verified-account-text {
-    font-size: 10px; /* Smaller text size */
-    color: #007bff; /* A lighter blue for better contrast */
-    margin-right: 15px; /* Increased distance between text and icon */
-}
-
-.verified-icon {
-    font-size: 12px; /* Slightly smaller icon */
-    color: #007bff; /* Same blue as text for consistency */
-}
-
-
-/* Search Button */
-.search-button {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    width: 50px;
-    height: 50px;
-    background: radial-gradient(circle, #0ff, #005);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 22px;
-    box-shadow: 0 4px 15px rgba(0, 255, 255, 0.4);
-    transition: transform 0.2s, box-shadow 0.3s;
-}
-.search-button:hover {
-    transform: scale(1.2);
-    box-shadow: 0 6px 20px rgba(0, 255, 255, 0.6);
-}
-
-/* Account Info Section */
-.account-info {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    background: linear-gradient(135deg, #6a5d4d, #7f8c8d); /* Warm brown gradient */
-    padding: 30px;
-    border-radius: 15px;
-    text-align: center;
-    border: 1px solid #444;
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
-    color: #fff;
-}
-
-/* User Information */
-.account-info h3 {
-    font-size: 28px;
-    font-weight: bold;
-    color: #e74c3c; /* Vibrant red */
-    letter-spacing: 1px;
-    margin: 10px 0;
-}
-
-.account-info p {
-    font-size: 18px;
-    color: #fff;
-    margin: 5px 0;
-    transition: color 0.3s, transform 0.3s;
-}
-
-.account-info p:hover {
-    color: #e74c3c; /* Change to red on hover */
-    transform: scale(1.05);
-}
-
-/* Logout Button */
-#logoutButton {
-    width: 160px;
-    height: 50px;
-    background: linear-gradient(135deg, #f39c12, #f1c40f); /* Golden gradient */
-    color: white;
-    border: none;
-    border-radius: 30px;
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: bold;
-    margin-top: 20px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    text-transform: uppercase;
-    box-shadow: 0 4px 10px rgba(243, 156, 18, 0.6); /* Soft golden glow */
-    transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
-}
-
-/* Hover effect */
-#logoutButton:hover {
-    background: linear-gradient(135deg, #f1c40f, #f39c12); /* Reverse gradient */
-    transform: scale(1.05); /* Slight hover zoom */
-    box-shadow: 0 6px 15px rgba(243, 156, 18, 0.8); /* Brighter golden glow */
-}
-
-/* Active/Pressed state */
-#logoutButton:active {
-    transform: scale(0.95); /* Slight press-in effect */
-    box-shadow: none;
-}
-
-/* Icon inside the logout button */
-#logoutButton i {
-    font-size: 20px;
-    color: #fff; /* Keep the icon white */
-}
-
-
-
-.add-members-dialog {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-.dialog-content {
-    background: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    width: 400px;
-    text-align: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-
-/* Button Styling */
-button {
-    padding: 12px 24px;
-    margin-top: 20px;
-    font-size: 16px;
-    font-weight: bold;
-    background: linear-gradient(135deg, #ff6f61, #ff914d);
-    border: none;
-    border-radius: 30px;
-    color: white;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(255, 111, 97, 0.5);
-}
-
-button:hover {
-    transform: scale(1.05);
-    box-shadow: 0 6px 20px rgba(255, 111, 97, 0.7);
-}
-
-button:active {
-    transform: scale(0.95);
-    box-shadow: none;
-}
-
-button:disabled {
-    background-color: #ccc;
-}
+/* Fade-out class */
 body.fade-out {
   opacity: 0;
 }
 
-/* Updated group chat container */
-.group-chat {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: #ffffff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  cursor: pointer;
-}
-
-.group-chat:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-.profile-image {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  object-fit: cover;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.group-info {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.group-chat h3 {
-  font-size: 16px;
-  margin: 0;
-  color: #1f1f1f;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.group-chat p {
-  margin: 2px 0 0;
-  font-size: 13px;
-  color: #555;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.group-chat span {
-  font-size: 11px;
-  color: #999;
-  margin-top: 2px;
-}
-
-/* Main layout */
+/* Main Container */
 .main-container {
   width: 85%;
   max-width: 1000px;
@@ -317,13 +42,14 @@ body.fade-out {
   padding: 24px;
   display: flex;
   gap: 20px;
+  position: relative;
 }
 
-/* Sidebar */
+/* Left Sidebar */
 .left-section {
   width: 45%;
   height: 100%;
-  background: #000000;
+  background: #000;
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
@@ -333,7 +59,25 @@ body.fade-out {
   overflow: hidden;
 }
 
-/* Chat type toggle */
+/* Sidebar Toggle Button */
+.sidebar-toggle {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  color: #333;
+  cursor: pointer;
+  z-index: 20;
+  transition: transform 0.3s ease;
+}
+
+.sidebar-toggle:hover {
+  transform: scale(1.1);
+}
+
+/* Chat Type Toggle */
 .chat-type-selection {
   display: flex;
   gap: 10px;
@@ -373,7 +117,7 @@ body.fade-out {
   background: #0066d6;
 }
 
-/* Chat list */
+/* Chat List */
 .chat-items-container {
   flex-grow: 1;
   overflow-y: auto;
@@ -383,13 +127,12 @@ body.fade-out {
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
-/* Individual chat item */
 .chat-item {
   display: flex;
   align-items: center;
   padding: 8px 10px;
   border-radius: 8px;
-  background: #ffffff;
+  background: #fff;
   margin-bottom: 8px;
   transition: background 0.2s ease, transform 0.2s ease;
   cursor: pointer;
@@ -445,332 +188,275 @@ body.fade-out {
   margin-top: 2px;
 }
 
-.sidebar-toggle {
+/* Right Section / Sidebar */
+.right-section {
+  width: 50%;
+  max-width: 400px;
+  padding: 20px;
+  background: linear-gradient(135deg, #6e7c7c, #a1a8a8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+  overflow-y: auto;
+  position: absolute;
+  top: 0;
+  right: -90%;
+  height: 100%;
+  border: 2px solid #ccc;
+  border-radius: 15px 0 0 15px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+  transition: right 0.3s ease;
+}
+
+.main-container.sidebar-open .right-section {
+  right: 0;
+}
+
+/* Profile Photo and Verified */
+.profile-photo.large {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 4px solid #0ff;
+  margin-bottom: 10px;
+  object-fit: cover;
+  box-shadow: 0 4px 15px rgba(0, 255, 255, 0.5);
+}
+
+.profile-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.verified-info {
+  display: none;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.verified-account-text {
+  font-size: 10px;
+  color: #007bff;
+  margin-right: 15px;
+}
+
+.verified-icon {
+  font-size: 12px;
+  color: #007bff;
+}
+
+/* Search Button */
+.search-button {
   position: absolute;
   top: 20px;
-  left: 20px;
-  background: transparent;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  background: radial-gradient(circle, #0ff, #005);
+  color: white;
   border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 22px;
+  box-shadow: 0 4px 15px rgba(0, 255, 255, 0.4);
+  transition: transform 0.2s, box-shadow 0.3s;
+}
+
+.search-button:hover {
+  transform: scale(1.2);
+  box-shadow: 0 6px 20px rgba(0, 255, 255, 0.6);
+}
+
+/* Account Info */
+.account-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  background: linear-gradient(135deg, #6a5d4d, #7f8c8d);
+  padding: 30px;
+  border-radius: 15px;
+  text-align: center;
+  border: 1px solid #444;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+  color: #fff;
+}
+
+.account-info h3 {
+  font-size: 28px;
+  font-weight: bold;
+  color: #e74c3c;
+  letter-spacing: 1px;
+  margin: 10px 0;
+}
+
+.account-info p {
+  font-size: 18px;
+  color: #fff;
+  margin: 5px 0;
+  transition: color 0.3s, transform 0.3s;
+}
+
+.account-info p:hover {
+  color: #e74c3c;
+  transform: scale(1.05);
+}
+
+/* Logout Button */
+#logoutButton {
+  width: 160px;
+  height: 50px;
+  background: linear-gradient(135deg, #f39c12, #f1c40f);
+  color: white;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  text-transform: uppercase;
+  box-shadow: 0 4px 10px rgba(243, 156, 18, 0.6);
+  transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+#logoutButton:hover {
+  background: linear-gradient(135deg, #f1c40f, #f39c12);
+  transform: scale(1.05);
+  box-shadow: 0 6px 15px rgba(243, 156, 18, 0.8);
+}
+
+#logoutButton:active {
+  transform: scale(0.95);
+  box-shadow: none;
+}
+
+#logoutButton i {
+  font-size: 20px;
+  color: #fff;
+}
+
+/* Dialogs (Create/Add Members) */
+.add-members-dialog,
+.create-group-dialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.dialog-content,
+.create-group-content {
+  background: #fff;
+  padding: 25px;
+  border-radius: 12px;
+  width: 320px;
+  text-align: center;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+  animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.create-group-content h2 {
   font-size: 24px;
   color: #333;
-  cursor: pointer;
-  z-index: 20;
-  transition: transform 0.3s ease;
+  margin-bottom: 20px;
 }
 
-.sidebar-toggle:hover {
-  transform: scale(1.1);
-}
-
-/* Background overlay for the dialog */
-.create-group-dialog {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.6); /* Darker background for better contrast */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    transition: opacity 0.3s ease-in-out; /* Smooth transition */
-}
-
-/* Content inside the dialog */
-.create-group-content {
-    background: #ffffff; /* White background */
-    padding: 25px;
-    border-radius: 12px; /* Rounded corners */
-    width: 320px;
-    text-align: center;
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1); /* Subtle shadow for 3D effect */
-    animation: slideIn 0.5s ease-out; /* Slide-in animation for the content */
-}
-.no-partner-message {
-    text-align: center;
-    margin: 20px auto;
-    padding: 20px;
-    background: #fef9e7;
-    border: 1px solid #f1c40f;
-    border-radius: 8px;
-    color: #d35400;
-    font-family: Arial, sans-serif;
-    font-size: 16px;
-    line-height: 1.5;
-    width: 90%;
-    max-width: 400px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-/* Animation for the dialog content */
-@keyframes slideIn {
-    0% {
-        transform: translateY(-20px);
-        opacity: 0;
-    }
-    100% {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-/* Title of the dialog */
-.create-group-content h2 {
-    font-size: 24px;
-    color: #333; /* Darker color for better readability */
-    margin-bottom: 20px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-/* Input field for group name */
 .create-group-content input {
-    width: 100%;
-    padding: 12px;
-    margin-bottom: 20px;
-    border: 2px solid #ddd;
-    border-radius: 8px;
-    font-size: 16px;
-    color: #555;
-    transition: border-color 0.3s ease; /* Smooth border transition */
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 20px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  color: #555;
+  transition: border-color 0.3s ease;
 }
 
-/* Focus effect on the input */
 .create-group-content input:focus {
-    border-color: #28a745; /* Green border when focused */
-    outline: none;
-}
-savebutton, cancelbutton {
-    display: inline-block;
-    padding: 10px 20px;
-    margin: 5px;
-    font-size: 16px;
-    font-weight: bold;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    text-align: center;
+  border-color: #28a745;
+  outline: none;
 }
 
-savebutton {
-    background-color: #4caf50; /* Green color for Save */
-    color: #fff; /* White text */
-    box-shadow: 0 4px 6px rgba(0, 128, 0, 0.3);
-}
-
-savebutton:hover {
-    background-color: #45a049; /* Slightly darker green */
-    transform: scale(1.05); /* Add hover effect */
-    box-shadow: 0 6px 8px rgba(0, 128, 0, 0.5);
-}
-
-cancelbutton {
-    background-color: #f44336; /* Red color for Cancel */
-    color: #fff; /* White text */
-    box-shadow: 0 4px 6px rgba(255, 0, 0, 0.3);
-}
-
-cancelbutton:hover {
-    background-color: #e53935; /* Slightly darker red */
-    transform: scale(1.05); /* Add hover effect */
-    box-shadow: 0 6px 8px rgba(255, 0, 0, 0.5);
-}
-
-/* General focus styles for accessibility */
-savebutton:focus, cancelbutton:focus {
-    outline: none;
-    box-shadow: 0 0 3px 3px rgba(0, 0, 255, 0.4);
-}
-
-/* Buttons container */
+/* Dialog Buttons */
 .dialog-buttons {
-    display: flex;
-    justify-content: space-between;
-    gap: 15px; /* Space between buttons */
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
 }
 
-/* Common button styles */
 .dialog-buttons button {
-    padding: 12px 20px;
-    font-size: 16px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background-color 0.3s, transform 0.2s ease;
+  padding: 12px 20px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s, transform 0.2s ease;
 }
 
-/* Button for saving */
-.dialog-buttons #saveGroupButton {
-    background-color: #28a745; /* Green for Save */
-    color: white;
+#saveGroupButton {
+  background-color: #28a745;
+  color: white;
 }
 
-.dialog-buttons #saveGroupButton:hover {
-    background-color: #218838; /* Darker green on hover */
-    transform: scale(1.05); /* Slight scale effect on hover */
+#saveGroupButton:hover {
+  background-color: #218838;
+  transform: scale(1.05);
 }
 
-/* Button for canceling */
-.dialog-buttons #cancelGroupButton {
-    background-color: #dc3545; /* Red for Cancel */
-    color: white;
+#cancelGroupButton {
+  background-color: #dc3545;
+  color: white;
 }
 
-.dialog-buttons #cancelGroupButton:hover {
-    background-color: #c82333; /* Darker red on hover */
-    transform: scale(1.05); /* Slight scale effect on hover */
+#cancelGroupButton:hover {
+  background-color: #c82333;
+  transform: scale(1.05);
 }
 
-/* Responsive design for smaller screens */
+/* Responsive Design */
 @media (max-width: 500px) {
-    .create-group-content {
-        width: 280px; /* Adjust width for smaller screens */
-    }
+  .create-group-content {
+    width: 280px;
+  }
 
-    .dialog-buttons {
-        flex-direction: column; /* Stack buttons on smaller screens */
-        gap: 10px;
-    }
+  .dialog-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
 
-    .dialog-buttons button {
-        width: 100%; /* Full width buttons */
-    }
-}
-.select-chat-item {
-    display: flex;
-    align-items: center; /* Align profile photo and name vertically */
-    padding: 10px;
-    margin-bottom: 10px;
-    background: #fff;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    gap: 15px; /* Space between profile photo and name */
+  .dialog-buttons button {
+    width: 100%;
+  }
 }
 
-.select-chat-item:hover {
-    background-color: #f0f8ff;
-    transform: scale(1.02); /* Slight hover effect */
-}
-.select-profile-photo {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%; /* Makes the image circular */
-    object-fit: cover; /* Ensures the image scales nicely */
-}
-.select-chat-item.selected {
-    background-color: #d1ecf1;
-    border-color: #17a2b8;
-}
-.select-name {
-    font-weight: bold;
-    color: #333;
-    font-size: 16px;
-    line-height: 1.2;
-}
-/* "Echo" label */
-.select-echo {
-    color: blue;
-    font-size: 12px; /* Slightly larger font size */
-    margin-left: 3px; /* Reduced margin for closer spacing */
-    display: inline-block;
-    vertical-align: middle;
-}
-
-
-
-/* Verification icon */
-.select-verification {
-    width: 16px; /* Slightly larger size */
-    height: 16px;
-    margin-left: 2px; /* Reduced margin for closer spacing */
-    vertical-align: middle;
-}
-/* Context Menu Styling */
-.context-menu {
-    position: absolute;
-    background-color: #ffffff;
-    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2), 0px 4px 6px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
-    z-index: 1000;
-    overflow: hidden;
-    min-width: 180px;
-    border: 1px solid #e0e0e0;
-    animation: fadeIn 0.2s ease-in-out;
-}
-
-.context-menu-item {
-    display: flex;
-    align-items: center;
-    padding: 12px 16px;
-    cursor: pointer;
-    font-size: 15px;
-    color: #333;
-    transition: all 0.3s ease;
-    font-weight: 500;
-}
-
-.context-menu-item i {
-    margin-right: 12px;
-    font-size: 18px;
-    color: #6c757d;
-    transition: color 0.3s ease;
-}
-
-.context-menu-item:hover {
-    background-color: #f8f9fa;
-    color: #0056b3;
-}
-
-.context-menu-item:hover i {
-    color: #0056b3;
-}
-
-.context-menu-item:not(:last-child) {
-    border-bottom: 1px solid #e9ecef;
-}
-
-/* Add subtle entry animation */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-.explore-host-btn {
-    position: absolute;
-    bottom: 20px;
-    left: 20px;
-    background: linear-gradient(45deg, #ff6b6b, #ffa502, #fffa65, #1e90ff, #6a89cc);
-    background-size: 200% 200%;
-    animation: gradientBG 3s ease infinite;
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    font-size: 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: 0.3s;
-}
-
-.explore-host-btn:hover {
-    transform: scale(1.05);
-    opacity: 0.9;
-}
-
-@keyframes gradientBG {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
 
 
     </style>
