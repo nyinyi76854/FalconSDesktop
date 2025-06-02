@@ -11,7 +11,801 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
+<style>
+    body {
+    font-family: 'Poppins', sans-serif; /* Modern font */
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+    background: linear-gradient(135deg, #1E1E1E, #3A3A3A); /* Dark gradient */
+    overflow: hidden;
+    opacity: 1;
+    transition: opacity 0.5s ease-in-out;
+}
+body.fade-out {
+    opacity: 0;
+}
+/* Container for each group chat */
+.group-chat {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    justify-content: flex-start; /* Align elements to the left */
+    width: 100%; /* Ensure full width */
+    box-sizing: border-box; /* Prevent content from overflowing */
+}
 
+
+/* Profile image - circular */
+.profile-image {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%; /* Makes the image circular */
+    object-fit: cover; /* Ensures the image fits within the circle */
+    margin-right: 15px; /* Space between profile image and text */
+}
+
+/* Group info container - aligns text to the right of the profile image */
+.group-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* Group name - displayed at the top right */
+.group-chat h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Last message text - below the group name */
+.group-chat p {
+    margin: 5px 0;
+    font-size: 14px;
+    color: #555;
+}
+
+/* Timestamp text - displayed below the last message */
+.group-chat span {
+    font-size: 12px;
+    color: #888;
+}
+.main-container {
+    width: 80%;
+    max-width: 900px;
+    height: 80vh;
+    background: rgba(255, 255, 255, 0.1); /* Transparent background */
+    backdrop-filter: blur(15px); /* Blurry glass effect */
+    border-radius: 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+/* Sidebar Toggle Button (Black Icon) */
+.sidebar-toggle {
+    position: absolute;
+    top: 15px;
+    left: 15px; /* Align to the left */
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: black; /* Set icon color to black */
+    cursor: pointer;
+    z-index: 10;
+    transition: transform 0.3s ease;
+}
+
+/* Left Section (Compact & Fixed Height) */
+.left-section {
+    width: 50%;
+    max-width: 500px; /* Slightly smaller for a compact look */
+    height: 80vh; /* Fixed height, not full screen but not half */
+    padding: 15px;
+    background-color: #ccc; /* Gray background */
+    box-sizing: border-box;
+    overflow-y: auto;
+    border-radius: 10px; /* Rounded corners for a sleek look */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Soft shadow */
+    transition: transform 0.3s ease;
+}
+
+
+.right-section {
+    width: 50%;
+    max-width: 400px;
+    padding: 20px;
+    background: linear-gradient(135deg, #6e7c7c, #a1a8a8); /* Gray Gradient */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-sizing: border-box;
+    overflow-y: auto;
+    position: absolute;
+    top: 0;
+    right: -90%; /* Initially Hidden */
+    height: 100%;
+    border: 2px solid #ccc; /* Gray border */
+    border-radius: 15px 0 0 15px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+    transition: right 0.3s ease;
+}
+
+
+/* When sidebar is open */
+.main-container.sidebar-open .right-section {
+    right: 0;
+}
+
+
+/* Profile Photo */
+.profile-photo {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 4px solid #0ff;
+    margin-bottom: 10px; /* Adjusted margin to create space for verification below */
+    object-fit: cover;
+    box-shadow: 0 4px 15px rgba(0, 255, 255, 0.5);
+}
+
+/* Verified info container */
+.profile-container {
+    display: flex;
+    flex-direction: column; /* Stack the text and icon vertically */
+    align-items: center;
+    margin-top: 10px; /* Added top margin for some space between profile photo and verified info */
+}
+
+.verified-info {
+    display: none; /* Initially hidden */
+    align-items: center; /* Horizontally align text and icon */
+    margin-top: 10px; /* Spacing between profile photo and verification section */
+}
+
+.verified-account-text {
+    font-size: 10px; /* Smaller text size */
+    color: #007bff; /* A lighter blue for better contrast */
+    margin-right: 15px; /* Increased distance between text and icon */
+}
+
+.verified-icon {
+    font-size: 12px; /* Slightly smaller icon */
+    color: #007bff; /* Same blue as text for consistency */
+}
+
+
+/* Search Button */
+.search-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    background: radial-gradient(circle, #0ff, #005);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 22px;
+    box-shadow: 0 4px 15px rgba(0, 255, 255, 0.4);
+    transition: transform 0.2s, box-shadow 0.3s;
+}
+.search-button:hover {
+    transform: scale(1.2);
+    box-shadow: 0 6px 20px rgba(0, 255, 255, 0.6);
+}
+
+/* Account Info Section */
+.account-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    background: linear-gradient(135deg, #6a5d4d, #7f8c8d); /* Warm brown gradient */
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    border: 1px solid #444;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+    color: #fff;
+}
+
+/* User Information */
+.account-info h3 {
+    font-size: 28px;
+    font-weight: bold;
+    color: #e74c3c; /* Vibrant red */
+    letter-spacing: 1px;
+    margin: 10px 0;
+}
+
+.account-info p {
+    font-size: 18px;
+    color: #fff;
+    margin: 5px 0;
+    transition: color 0.3s, transform 0.3s;
+}
+
+.account-info p:hover {
+    color: #e74c3c; /* Change to red on hover */
+    transform: scale(1.05);
+}
+
+/* Logout Button */
+#logoutButton {
+    width: 160px;
+    height: 50px;
+    background: linear-gradient(135deg, #f39c12, #f1c40f); /* Golden gradient */
+    color: white;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    text-transform: uppercase;
+    box-shadow: 0 4px 10px rgba(243, 156, 18, 0.6); /* Soft golden glow */
+    transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+/* Hover effect */
+#logoutButton:hover {
+    background: linear-gradient(135deg, #f1c40f, #f39c12); /* Reverse gradient */
+    transform: scale(1.05); /* Slight hover zoom */
+    box-shadow: 0 6px 15px rgba(243, 156, 18, 0.8); /* Brighter golden glow */
+}
+
+/* Active/Pressed state */
+#logoutButton:active {
+    transform: scale(0.95); /* Slight press-in effect */
+    box-shadow: none;
+}
+
+/* Icon inside the logout button */
+#logoutButton i {
+    font-size: 20px;
+    color: #fff; /* Keep the icon white */
+}
+
+/* Scrollable chat items container */
+#chatItemsContainer {
+    flex-grow: 1;
+    overflow-y: auto; /* Enables scrolling */
+    padding: 10px;
+}
+
+.add-members-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.dialog-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    width: 400px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+
+/* Button Styling */
+button {
+    padding: 12px 24px;
+    margin-top: 20px;
+    font-size: 16px;
+    font-weight: bold;
+    background: linear-gradient(135deg, #ff6f61, #ff914d);
+    border: none;
+    border-radius: 30px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(255, 111, 97, 0.5);
+}
+
+button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(255, 111, 97, 0.7);
+}
+
+button:active {
+    transform: scale(0.95);
+    box-shadow: none;
+}
+
+button:disabled {
+    background-color: #ccc;
+}
+/* Chat item container */
+.chat-item {
+    display: flex;
+    align-items: center;
+    padding: 6px 12px; /* Reduced padding for compactness */
+    margin-bottom: 6px; /* Reduced margin between items */
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    font-size: 14px; /* Slightly smaller font for a more compact feel */
+}
+
+/* Hover effect */
+.chat-item:hover {
+    background-color: #f0f8ff; /* Lighter hover background */
+    transform: translateY(-2px); /* Subtle lift effect */
+}
+
+/* Selected state */
+.chat-item.selected {
+    background-color: #d1ecf1;
+    border-color: #17a2b8;
+}
+
+/* Profile photo */
+.profile-photo {
+    width: 32px; /* Reduced size */
+    height: 32px; /* Reduced size */
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 10px; /* Reduced margin */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Chat item content */
+.chat-item-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+/* Name row styling */
+.chat-item-content .name {
+    font-size: 14px; /* Slightly smaller font size */
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 3px; /* Reduced margin for compactness */
+}
+
+/* Last message */
+.chat-item-content .lastMessage {
+    font-size: 12px; /* Smaller font size for last message */
+    color: #555;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    flex-grow: 1;
+}
+
+/* Timestamp */
+.chat-item-content .timestamp {
+    font-size: 10px; /* Smaller timestamp font */
+    color: #888;
+    margin-top: 2px; /* Reduced margin */
+}
+
+/* Timestamp container to prevent overflow */
+.chat-item-content .timestamp-container {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+}
+
+/* Chat container for overall list */
+.chat-items-container {
+    max-height: 220px; /* More compact height */
+    overflow-y: auto;
+    margin: 8px 0; /* Reduced margin */
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 6px; /* Slightly less padding */
+}
+
+
+.left-section {
+    width: 50%; /* Take up half of the screen width */
+    padding: 20px;
+    background: linear-gradient(to bottom, #e3f2fd, #fce4ec);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    box-sizing: border-box;
+    border-right: 2px solid #ddd;
+}
+
+
+/* Chat type selection container */
+.chat-type-selection {
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+    background: #f8f9fa; /* Subtle background */
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Soft shadow */
+}
+
+/* Chat type button */
+.chat-type-btn {
+    flex: 1;
+    padding: 12px;
+    background: #e3e7ed; /* Light modern background */
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* Hover effect */
+.chat-type-btn:hover {
+    background: #d6dae2; /* Subtle hover change */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Active button */
+.chat-type-btn.active {
+    background: #007bff; /* Premium blue */
+    color: #fff;
+    box-shadow: 0 6px 12px rgba(0, 123, 255, 0.3);
+}
+
+/* Active hover effect */
+.chat-type-btn.active:hover {
+    background: #0069d9;
+}
+
+/* Icon styles */
+.chat-type-btn i {
+    font-size: 16px;
+}
+
+
+/* Background overlay for the dialog */
+.create-group-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6); /* Darker background for better contrast */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    transition: opacity 0.3s ease-in-out; /* Smooth transition */
+}
+
+/* Content inside the dialog */
+.create-group-content {
+    background: #ffffff; /* White background */
+    padding: 25px;
+    border-radius: 12px; /* Rounded corners */
+    width: 320px;
+    text-align: center;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1); /* Subtle shadow for 3D effect */
+    animation: slideIn 0.5s ease-out; /* Slide-in animation for the content */
+}
+.no-partner-message {
+    text-align: center;
+    margin: 20px auto;
+    padding: 20px;
+    background: #fef9e7;
+    border: 1px solid #f1c40f;
+    border-radius: 8px;
+    color: #d35400;
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Animation for the dialog content */
+@keyframes slideIn {
+    0% {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Title of the dialog */
+.create-group-content h2 {
+    font-size: 24px;
+    color: #333; /* Darker color for better readability */
+    margin-bottom: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Input field for group name */
+.create-group-content input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    color: #555;
+    transition: border-color 0.3s ease; /* Smooth border transition */
+}
+
+/* Focus effect on the input */
+.create-group-content input:focus {
+    border-color: #28a745; /* Green border when focused */
+    outline: none;
+}
+savebutton, cancelbutton {
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-align: center;
+}
+
+savebutton {
+    background-color: #4caf50; /* Green color for Save */
+    color: #fff; /* White text */
+    box-shadow: 0 4px 6px rgba(0, 128, 0, 0.3);
+}
+
+savebutton:hover {
+    background-color: #45a049; /* Slightly darker green */
+    transform: scale(1.05); /* Add hover effect */
+    box-shadow: 0 6px 8px rgba(0, 128, 0, 0.5);
+}
+
+cancelbutton {
+    background-color: #f44336; /* Red color for Cancel */
+    color: #fff; /* White text */
+    box-shadow: 0 4px 6px rgba(255, 0, 0, 0.3);
+}
+
+cancelbutton:hover {
+    background-color: #e53935; /* Slightly darker red */
+    transform: scale(1.05); /* Add hover effect */
+    box-shadow: 0 6px 8px rgba(255, 0, 0, 0.5);
+}
+
+/* General focus styles for accessibility */
+savebutton:focus, cancelbutton:focus {
+    outline: none;
+    box-shadow: 0 0 3px 3px rgba(0, 0, 255, 0.4);
+}
+
+/* Buttons container */
+.dialog-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px; /* Space between buttons */
+}
+
+/* Common button styles */
+.dialog-buttons button {
+    padding: 12px 20px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s, transform 0.2s ease;
+}
+
+/* Button for saving */
+.dialog-buttons #saveGroupButton {
+    background-color: #28a745; /* Green for Save */
+    color: white;
+}
+
+.dialog-buttons #saveGroupButton:hover {
+    background-color: #218838; /* Darker green on hover */
+    transform: scale(1.05); /* Slight scale effect on hover */
+}
+
+/* Button for canceling */
+.dialog-buttons #cancelGroupButton {
+    background-color: #dc3545; /* Red for Cancel */
+    color: white;
+}
+
+.dialog-buttons #cancelGroupButton:hover {
+    background-color: #c82333; /* Darker red on hover */
+    transform: scale(1.05); /* Slight scale effect on hover */
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 500px) {
+    .create-group-content {
+        width: 280px; /* Adjust width for smaller screens */
+    }
+
+    .dialog-buttons {
+        flex-direction: column; /* Stack buttons on smaller screens */
+        gap: 10px;
+    }
+
+    .dialog-buttons button {
+        width: 100%; /* Full width buttons */
+    }
+}
+.select-chat-item {
+    display: flex;
+    align-items: center; /* Align profile photo and name vertically */
+    padding: 10px;
+    margin-bottom: 10px;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    gap: 15px; /* Space between profile photo and name */
+}
+
+.select-chat-item:hover {
+    background-color: #f0f8ff;
+    transform: scale(1.02); /* Slight hover effect */
+}
+.select-profile-photo {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%; /* Makes the image circular */
+    object-fit: cover; /* Ensures the image scales nicely */
+}
+.select-chat-item.selected {
+    background-color: #d1ecf1;
+    border-color: #17a2b8;
+}
+.select-name {
+    font-weight: bold;
+    color: #333;
+    font-size: 16px;
+    line-height: 1.2;
+}
+/* "Echo" label */
+.select-echo {
+    color: blue;
+    font-size: 12px; /* Slightly larger font size */
+    margin-left: 3px; /* Reduced margin for closer spacing */
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* Verification icon */
+.select-verification {
+    width: 16px; /* Slightly larger size */
+    height: 16px;
+    margin-left: 2px; /* Reduced margin for closer spacing */
+    vertical-align: middle;
+}
+/* Context Menu Styling */
+.context-menu {
+    position: absolute;
+    background-color: #ffffff;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2), 0px 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    z-index: 1000;
+    overflow: hidden;
+    min-width: 180px;
+    border: 1px solid #e0e0e0;
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+.context-menu-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    cursor: pointer;
+    font-size: 15px;
+    color: #333;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.context-menu-item i {
+    margin-right: 12px;
+    font-size: 18px;
+    color: #6c757d;
+    transition: color 0.3s ease;
+}
+
+.context-menu-item:hover {
+    background-color: #f8f9fa;
+    color: #0056b3;
+}
+
+.context-menu-item:hover i {
+    color: #0056b3;
+}
+
+.context-menu-item:not(:last-child) {
+    border-bottom: 1px solid #e9ecef;
+}
+
+/* Add subtle entry animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.explore-host-btn {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    background: linear-gradient(45deg, #ff6b6b, #ffa502, #fffa65, #1e90ff, #6a89cc);
+    background-size: 200% 200%;
+    animation: gradientBG 3s ease infinite;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.explore-host-btn:hover {
+    transform: scale(1.05);
+    opacity: 0.9;
+}
+
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+</style>
 </head>
 <body>
    <div class="main-container">
